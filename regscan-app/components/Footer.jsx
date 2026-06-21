@@ -27,6 +27,7 @@ export function Footer() {
           <div>
             <h5>Resources</h5>
             <ul>
+              <li><Link href="/blog/">Blog</Link></li>
               <li><Link href="/#content">About MOT &amp; tax</Link></li>
               <li><Link href="/#faq">FAQs</Link></li>
               <li><a href="#">Data sources (DVSA/DVLA)</a></li>

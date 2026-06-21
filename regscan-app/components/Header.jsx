@@ -16,6 +16,7 @@ export function Header({ active }) {
           </Link>
           <nav className="nav" aria-label="Primary">
             <Link href="/#how" className={"nav-link" + (active === "how" ? " active" : "")}>How it works</Link>
+            <Link href="/blog/" className={"nav-link" + (active === "blog" ? " active" : "")}>Blog</Link>
             {REMINDERS_ENABLED && (
               <Link href="/#reminders" className={"nav-link" + (active === "reminders" ? " active" : "")}>Reminders</Link>
             )}
@@ -45,6 +46,7 @@ export function GarageHeader() {
           <nav className="nav">
             <Link href="/" className="nav-link">Home</Link>
             <Link href="/garage/" className="nav-link active">My Garage</Link>
+            <Link href="/blog/" className="nav-link">Blog</Link>
             {REMINDERS_ENABLED && <Link href="/#reminders" className="nav-link">Reminders</Link>}
             <Link href="/#faq" className="nav-link">Help</Link>
           </nav>
