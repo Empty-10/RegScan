@@ -8,6 +8,8 @@ import {
   getPostsByCategory,
   cleanText,
   excerptText,
+  extractFaq,
+  niceCategoryName,
   SITE_URL,
 } from "@/lib/posts";
 
@@ -53,9 +55,22 @@ export default function Page({ params }) {
   if (!post) notFound();
 
   const title = cleanText(post.title);
-  const categoryName = cleanText(post.categoryName);
+  const categoryName = niceCategoryName(post.categoryName);
   const url = `${SITE_URL}${post.pathname}`;
   const related = getPostsByCategory(post.categorySlug).filter((p) => p.slug !== post.slug).slice(0, 4);
+  const faqs = extractFaq(post.contentHtml);
+
+  const faqLd = faqs.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+      }
+    : null;
 
   const articleLd = {
     "@context": "https://schema.org",
@@ -134,6 +149,9 @@ export default function Page({ params }) {
       <Footer />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      {faqLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      )}
     </>
   );
 }

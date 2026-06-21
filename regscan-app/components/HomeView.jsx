@@ -9,7 +9,7 @@ import { Footer } from "./Footer";
 import { PlateInput, StatusBadge, FaqItem } from "./ui";
 import { REMINDERS_ENABLED } from "@/lib/features";
 
-export default function HomeView() {
+export default function HomeView({ guides = [] }) {
   const router = useRouter();
   const [vrm, setVrm] = useState("");
   const [vtype, setVtype] = useState("car");
@@ -157,6 +157,29 @@ export default function HomeView() {
           </div>
         </div>
       </section>
+
+      {/* POPULAR GUIDES — links home → pillar guides (topic-cluster authority) */}
+      {guides.length > 0 && (
+        <section className="section" id="guides">
+          <div className="container">
+            <span className="eyebrow">MOT &amp; tax guides</span>
+            <h2>Popular guides.</h2>
+            <p className="lede">In-depth, regularly updated guidance on keeping your vehicle road-legal.</p>
+            <div className="three-col">
+              {guides.map((g) => (
+                <Link key={g.slug} href={g.href} className="benefit-card" style={{ textDecoration: "none" }}>
+                  <div className="ico"><Icon name="list" size={22} /></div>
+                  <h3>{g.name}</h3>
+                  <p>{g.pillarTitle} — plus {g.count} guide{g.count === 1 ? "" : "s"} in this topic.</p>
+                </Link>
+              ))}
+            </div>
+            <div style={{ marginTop: 24 }}>
+              <Link href="/blog/" className="btn btn-secondary">Browse all guides <Icon name="arrow-right" size={14} /></Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* REMINDERS BAND */}
       {REMINDERS_ENABLED && (

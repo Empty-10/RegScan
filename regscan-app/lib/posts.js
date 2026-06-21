@@ -66,3 +66,44 @@ export function excerptText(html, max = 155) {
   const t = cleanText(html);
   return t.length > max ? t.slice(0, max - 1).trimEnd() + "…" : t;
 }
+
+// Display-friendly category name: title-case but keep "MOT"/"DVLA" etc. uppercase.
+export function niceCategoryName(name) {
+  return cleanText(name)
+    .split(" ")
+    .map((w) => (/^(mot|dvla|dvsa|ni|uk)$/i.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
+// Extracts FAQ question/answer pairs from a post body (an "h2 Frequently Asked
+// Questions" section followed by h3 question + paragraph answers) for FAQPage schema.
+export function extractFaq(html) {
+  if (!html) return [];
+  const start = html.search(/<h2[^>]*>(?:(?!<\/h2>)[\s\S])*frequently asked questions[\s\S]*?<\/h2>/i);
+  if (start === -1) return [];
+  let section = html.slice(start);
+  const next = section.slice(1).search(/<h2[^>]/i); // stop at the next h2
+  if (next !== -1) section = section.slice(0, next + 1);
+
+  const faqs = [];
+  for (const block of section.split(/<h3[^>]*>/i).slice(1)) {
+    const end = block.search(/<\/h3>/i);
+    if (end === -1) continue;
+    const question = cleanText(block.slice(0, end));
+    const answer = cleanText(block.slice(end + 5));
+    if (question && answer) faqs.push({ question, answer });
+  }
+  return faqs;
+}
+
+// Picks the "pillar" post for a category: prefers a slug matching the category
+// or one that reads like a comprehensive guide; falls back to the newest.
+export function getPillarPost(categorySlug) {
+  const posts = getPostsByCategory(categorySlug);
+  return (
+    posts.find((p) => p.slug === categorySlug || p.slug.startsWith(categorySlug)) ||
+    posts.find((p) => /(complete|ultimate|comprehensive|guide)/i.test(p.slug)) ||
+    posts[0] ||
+    null
+  );
+}
