@@ -25,8 +25,8 @@ function buildModel(v) {
 
   const meta = [
     v.colour,
-    titleCase(v.fuel),
-    String(v.year),
+    v.fuel && v.fuel !== "—" ? titleCase(v.fuel) : null,
+    v.year != null ? String(v.year) : null,
     v.engineCc ? `${(v.engineCc / 1000).toFixed(1)}L` : null,
     v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : null,
   ].filter(Boolean);
@@ -419,7 +419,11 @@ function MotRow({ test, unit, defaultOpen }) {
       {open && (
         <div className="body">
           {test.items.length === 0 ? (
-            <div style={{ fontSize: 14, color: "var(--ink-3)" }}>No advisories or defects recorded. Clean pass.</div>
+            <div style={{ fontSize: 14, color: "var(--ink-3)" }}>
+              {isPass
+                ? "No advisories or defects recorded. Clean pass."
+                : "This test failed, but no defect details were recorded against it."}
+            </div>
           ) : (
             <div className="defects">
               {test.items.map((d, j) => (

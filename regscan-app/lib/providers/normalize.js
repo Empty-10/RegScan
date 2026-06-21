@@ -21,6 +21,11 @@ const toIsoDate = (value) => {
   return value; // already a full date string
 };
 
+const yearFrom = (value) => {
+  const m = String(value || "").match(/(\d{4})/);
+  return m ? Number(m[1]) : null;
+};
+
 const daysUntil = (iso) => {
   if (!iso) return null;
   return Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
@@ -48,7 +53,9 @@ function mapMotTests(mot) {
       mileageReadable: readable,
       testNumber: t.motTestNumber || null,
       expiryDate: t.expiryDate || null,
-      defects: (t.rfrAndComments || [])
+      // The current MOT History API uses `defects`; older payloads used
+      // `rfrAndComments`. Support both.
+      defects: (t.defects || t.rfrAndComments || [])
         .filter((r) => String(r.type || "").toUpperCase() !== "USER ENTERED")
         .map((r) => ({ type: mapDefectType(r), text: r.text })),
     };
@@ -102,10 +109,13 @@ export function normalizeVehicle({ vrm, ves, mot }) {
     make: titleCase(make),
     model: titleCase(mot?.model || ""),
     monogram: monogramFor(make),
-    year: ves?.yearOfManufacture ?? null,
+    // Fall back to DVSA's manufacture/first-used dates when DVLA VES is absent.
+    year: ves?.yearOfManufacture ?? yearFrom(mot?.manufactureDate) ?? yearFrom(mot?.firstUsedDate),
     colour: titleCase(ves?.colour || mot?.primaryColour || ""),
     fuel,
-    engineCc: ves?.engineCapacity ?? null,
+    engineCc:
+      ves?.engineCapacity ??
+      (mot?.engineSize != null && mot?.engineSize !== "" ? Number(mot.engineSize) : null),
     co2: ves?.co2Emissions ?? null,
     euroStatus: euroStatus || "—",
     // bodyType/doors/previousKeepers are NOT provided by DVSA or DVLA VES —
@@ -129,7 +139,9 @@ export function normalizeVehicle({ vrm, ves, mot }) {
     taxExpiry: ves?.taxDueDate || null,
     taxClass: null,
     firstRegistered:
-      toIsoDate(mot?.firstUsedDate) || toIsoDate(ves?.monthOfFirstRegistration),
+      toIsoDate(mot?.firstUsedDate) ||
+      toIsoDate(mot?.registrationDate) ||
+      toIsoDate(ves?.monthOfFirstRegistration),
     mileageUnit: latestRead?.mileageUnit || "mi",
     ulez: deriveUlez(fuel, euroStatus),
     motTests,
