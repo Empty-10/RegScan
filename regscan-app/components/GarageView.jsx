@@ -234,7 +234,7 @@ function VehicleCard({ v, onRemove, onToggleReminder }) {
 
       <div className="actions">
         <div className="l">
-          <Link href={`/check?vrm=${v.vrm.replace(/\s/g, "")}&type=car`} className="btn btn-blue btn-sm">View details</Link>
+          <Link href={`/check/?vrm=${v.vrm.replace(/\s/g, "")}&type=car`} className="btn btn-blue btn-sm">View details</Link>
           {REMINDERS_ENABLED && (
             <button className="btn btn-secondary btn-sm">
               <Icon name="bell" size={14} /> Manage reminders

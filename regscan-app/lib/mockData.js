@@ -212,28 +212,103 @@ export function daysUntil(iso) {
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
 
+// A stable signature for a defect, used to detect the same issue recurring across
+// tests. Prefers the MOT manual rule code (e.g. "5.2.3"); falls back to the first
+// few normalized words of the text.
+function defectSignature(text) {
+  if (!text) return null;
+  const code = String(text).match(/\b\d+\.\d+(?:\.\d+)?\b/);
+  if (code) return code[0];
+  return String(text).toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ").slice(0, 5).join(" ");
+}
+
 // Transparent, defensible Vehicle Health score (replaces the prototype's hardcoded 82).
-// Starts at 100 and deducts for real, explainable factors so the number can always be justified.
+// Starts at 100 and deducts across four capped categories so the number can always
+// be justified, with each deduction producing a plain-English reason:
+//   1) legal & safety status   2) current condition (latest test, severity-weighted)
+//   3) failure track record (recency-decayed)   4) patterns (recurring + mileage)
 export function computeHealth(v) {
   let score = 100;
   const reasons = [];
-  if (v.motStatus === "expired") { score -= 45; reasons.push("MOT expired"); }
-  else if (v.motStatus === "due-soon") { score -= 12; reasons.push("MOT due soon"); }
-  if (v.taxStatus === "expired") { score -= 25; reasons.push("Tax expired"); }
+  const tests = v.motTests || [];
+
+  // --- 1. Legal & safety status ---
+  if (v.motStatus === "expired") { score -= 35; reasons.push("MOT expired"); }
+  else if (v.motStatus === "due-soon") { score -= 10; reasons.push("MOT due soon"); }
+
+  if (v.taxStatus === "expired") { score -= 20; reasons.push("Untaxed"); }
   else if (v.taxStatus === "sorn") { score -= 5; reasons.push("Declared SORN"); }
-
-  const latest = v.motTests && v.motTests[0];
-  const openAdvisories = latest ? latest.defects.filter((d) => d.type === "advisory").length : 0;
-  if (openAdvisories) { score -= Math.min(openAdvisories * 6, 24); reasons.push(`${openAdvisories} open advisory${openAdvisories > 1 ? "ies" : ""}`); }
-
-  const everFailed = (v.motTests || []).some((t) => t.result === "fail");
-  if (everFailed) { score -= 4; reasons.push("Past MOT failure"); }
-
-  if (v.ulez && v.ulez.chargeable) { score -= 3; reasons.push("ULEZ chargeable"); }
 
   if (v.hasOutstandingRecall) { score -= 15; reasons.push("Outstanding safety recall"); }
 
+  // --- 2. Current condition: defects on the latest test, weighted by severity ---
+  const latest = tests[0];
+  if (latest && latest.defects && latest.defects.length) {
+    const n = (type) => latest.defects.filter((d) => d.type === type).length;
+    const dangerous = n("dangerous"), major = n("major"), advisory = n("advisory");
+    const current = Math.min(
+      Math.min(dangerous * 12, 36) + Math.min(major * 7, 28) + Math.min(advisory * 3, 15),
+      40
+    );
+    if (current > 0) {
+      score -= current;
+      const parts = [];
+      if (dangerous) parts.push(`${dangerous} dangerous`);
+      if (major) parts.push(`${major} major`);
+      if (advisory) parts.push(`${advisory} advisory`);
+      reasons.push(`${parts.join(", ")} at last test`);
+    }
+  }
+
+  // --- 3. Failure track record: recency-decayed, excluding the latest test ---
+  const now = Date.now();
+  const YEAR = 365.25 * 24 * 60 * 60 * 1000;
+  let historyDed = 0;
+  tests.forEach((t, i) => {
+    if (i === 0 || t.result !== "fail" || !t.date) return; // latest already in (2)
+    const yearsAgo = (now - new Date(t.date).getTime()) / YEAR;
+    historyDed += 8 * Math.max(0.15, 1 - yearsAgo / 7);
+  });
+  historyDed = Math.min(historyDed, 20);
+  if (historyDed >= 1) {
+    score -= historyDed;
+    const failCount = tests.filter((t) => t.result === "fail").length;
+    reasons.push(`Past MOT failure${failCount > 1 ? "s" : ""}`);
+  }
+  if (tests.slice(0, 3).filter((t) => t.result === "fail").length >= 2) {
+    score -= 5;
+    reasons.push("Repeated recent failures");
+  }
+
+  // --- 4. Patterns: recurring advisories + mileage integrity ---
+  const sigCounts = {};
+  tests.forEach((t) => {
+    const seen = new Set();
+    (t.defects || []).forEach((d) => {
+      const sig = defectSignature(d.text);
+      if (!sig || seen.has(sig)) return; // count each issue once per test
+      seen.add(sig);
+      sigCounts[sig] = (sigCounts[sig] || 0) + 1;
+    });
+  });
+  const recurring = Object.values(sigCounts).filter((c) => c >= 2).length;
+  if (recurring) {
+    score -= Math.min(recurring * 4, 12);
+    reasons.push(`${recurring} recurring advisor${recurring > 1 ? "ies" : "y"}`);
+  }
+
+  const readings = tests.filter((t) => t.mileage != null).map((t) => t.mileage).reverse();
+  let mileageIssue = tests.some((t) => t.mileageReadable === false);
+  for (let i = 1; i < readings.length && !mileageIssue; i++) {
+    if (readings[i] < readings[i - 1]) mileageIssue = true;
+  }
+  if (mileageIssue) { score -= 10; reasons.push("Mileage inconsistency"); }
+
+  // --- finalize ---
   score = Math.max(0, Math.min(100, Math.round(score)));
-  const state = score >= 80 ? "Good standing" : score >= 50 ? "Needs attention" : "Action required";
+  const state =
+    score >= 80 ? "Good standing" :
+    score >= 60 ? "Fair" :
+    score >= 40 ? "Needs attention" : "Action required";
   return { score, state, note: reasons.length ? reasons.join(" · ") : "No issues found" };
 }

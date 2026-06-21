@@ -19,12 +19,12 @@ export function Header({ active }) {
             {REMINDERS_ENABLED && (
               <Link href="/#reminders" className={"nav-link" + (active === "reminders" ? " active" : "")}>Reminders</Link>
             )}
-            <Link href="/garage" className={"nav-link" + (active === "garage" ? " active" : "")}>My Garage</Link>
+            <Link href="/garage/" className={"nav-link" + (active === "garage" ? " active" : "")}>My Garage</Link>
             <Link href="/#faq" className={"nav-link" + (active === "faq" ? " active" : "")}>FAQs</Link>
           </nav>
           <div className="header-cta">
-            <Link href="/garage" className="btn btn-ghost btn-sm">Log in</Link>
-            <Link href="/garage" className="btn btn-primary btn-sm">Sign up free</Link>
+            <Link href="/garage/" className="btn btn-ghost btn-sm">Log in</Link>
+            <Link href="/garage/" className="btn btn-primary btn-sm">Sign up free</Link>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@ export function GarageHeader() {
           </Link>
           <nav className="nav">
             <Link href="/" className="nav-link">Home</Link>
-            <Link href="/garage" className="nav-link active">My Garage</Link>
+            <Link href="/garage/" className="nav-link active">My Garage</Link>
             {REMINDERS_ENABLED && <Link href="/#reminders" className="nav-link">Reminders</Link>}
             <Link href="/#faq" className="nav-link">Help</Link>
           </nav>

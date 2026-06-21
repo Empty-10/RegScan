@@ -175,7 +175,7 @@ export default function ArticleView() {
           <div className="container">
             <h2>Never miss your MOT or tax deadline</h2>
             <p>Free reminders at 30, 14 and 1 day before. No account needed.</p>
-            <Link href="/garage" className="btn btn-primary btn-lg">
+            <Link href="/garage/" className="btn btn-primary btn-lg">
               <Icon name="bell" size={18} /> Set free reminder <Icon name="arrow-right" size={16} />
             </Link>
           </div>

@@ -1743,3 +1743,40 @@ p { margin: 0; line-height: 1.55; }
   display: inline-flex; align-items: center; gap: 6px;
 }
 .related-card:hover .r-more { color: var(--blue-ink); }
+
+/* ---------- Migrated blog / content pages ---------- */
+.post-page { padding: 40px 0 64px; }
+.container-narrow { max-width: 760px; }
+.post-title {
+  font-size: clamp(28px, 4vw, 40px); font-weight: 800;
+  letter-spacing: -0.02em; line-height: 1.15; margin: 12px 0 24px;
+}
+.post-content { font-size: 17px; line-height: 1.7; color: var(--ink-2); }
+.post-content h2 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 36px 0 12px; color: var(--ink); }
+.post-content h3 { font-size: 21px; font-weight: 700; margin: 28px 0 10px; color: var(--ink); }
+.post-content p { margin: 0 0 18px; }
+.post-content ul, .post-content ol { margin: 0 0 18px; padding-left: 24px; }
+.post-content li { margin: 0 0 8px; }
+.post-content a { color: var(--blue); text-decoration: underline; }
+.post-content a:hover { color: var(--blue-ink); }
+.post-content img { max-width: 100%; height: auto; border-radius: var(--radius-md); margin: 20px 0; }
+.post-content table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+.post-content th, .post-content td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+.post-content th { background: var(--bg); font-weight: 700; }
+.post-content blockquote {
+  border-left: 3px solid var(--amber); margin: 20px 0; padding: 6px 0 6px 18px;
+  color: var(--ink-3); font-style: italic;
+}
+.post-list { list-style: none; padding: 0; margin: 24px 0 0; }
+.post-list li { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.post-list li a { font-size: 19px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.post-list li a:hover { color: var(--blue); }
+.post-list li p { margin: 6px 0 0; font-size: 14.5px; color: var(--ink-3); }
+.blog-cat { margin-top: 36px; }
+.blog-cat > h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.blog-cat > h2 a { color: var(--ink); text-decoration: none; }
+.blog-cat > h2 a:hover { color: var(--blue); }
+.post-hero {
+  width: 100%; height: auto; border-radius: var(--radius-lg);
+  margin: 0 0 28px; display: block; aspect-ratio: 16 / 9; object-fit: cover;
+}

@@ -26,7 +26,7 @@ export default function HomeView() {
     setBusy(true);
     setError(null);
     const params = new URLSearchParams({ vrm: cleaned, type: vtype });
-    router.push(`/check?${params.toString()}`);
+    router.push(`/check/?${params.toString()}`);
   };
 
   return (
@@ -174,8 +174,8 @@ export default function HomeView() {
                 <li><span className="check"><Icon name="check" size={14} /></span><span><strong>Unsubscribe anytime</strong> from a single click — no spam, no upsells in email.</span></li>
               </ul>
               <div style={{ display: "flex", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
-                <Link href="/garage" className="btn btn-primary btn-lg"><Icon name="bell" size={18} /> Set up free reminders</Link>
-                <Link href="/garage" className="btn btn-secondary btn-lg">See an example garage</Link>
+                <Link href="/garage/" className="btn btn-primary btn-lg"><Icon name="bell" size={18} /> Set up free reminders</Link>
+                <Link href="/garage/" className="btn btn-secondary btn-lg">See an example garage</Link>
               </div>
             </div>
 

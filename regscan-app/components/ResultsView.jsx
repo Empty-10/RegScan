@@ -241,7 +241,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                 <div className="vp-health-text">
                   <div className="vp-health-label">Vehicle health</div>
                   <div className="vp-health-state">
-                    <span className="dotrow green" />{m.health.state}
+                    <span className={"dotrow " + (m.health.score >= 80 ? "green" : m.health.score >= 40 ? "amber" : "red")} />{m.health.state}
                   </div>
                   <div className="vp-health-note">{m.health.note}</div>
                 </div>
@@ -488,7 +488,7 @@ function HealthRing({ score }) {
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(100, score)) / 100;
   const dash = c * pct;
-  const color = score >= 80 ? "var(--green)" : score >= 50 ? "#E0A100" : "var(--red)";
+  const color = score >= 80 ? "var(--green)" : score >= 40 ? "#E0A100" : "var(--red)";
   return (
     <div className="vp-health-ring">
       <svg width="124" height="124" viewBox="0 0 124 124" role="img" aria-label={`Vehicle health ${score} out of 100`}>
