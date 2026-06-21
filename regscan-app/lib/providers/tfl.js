@@ -25,10 +25,15 @@ export async function fetchAirQuality() {
       forecasts.find((f) => /current/i.test(f.forecastType || "")) || forecasts[0];
     if (!current) return null;
 
+    const future = forecasts.find((f) => /future/i.test(f.forecastType || ""));
+
     return {
       band: current.forecastBand || null, // e.g. "Low", "Moderate", "High"
       summary: current.forecastSummary || null,
       type: current.forecastType || null,
+      future: future
+        ? { band: future.forecastBand || null, summary: future.forecastSummary || null }
+        : null,
     };
   } catch (e) {
     console.error("[tfl] AirQuality error:", e.message);

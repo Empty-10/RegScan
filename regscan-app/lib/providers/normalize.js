@@ -53,6 +53,7 @@ function mapMotTests(mot) {
       mileageReadable: readable,
       testNumber: t.motTestNumber || null,
       expiryDate: t.expiryDate || null,
+      registrationAtTest: t.registrationAtTimeOfTest || null,
       // The current MOT History API uses `defects`; older payloads used
       // `rfrAndComments`. Support both.
       defects: (t.defects || t.rfrAndComments || [])
@@ -137,6 +138,7 @@ export function normalizeVehicle({ vrm, ves, mot }) {
     motExpiry,
     taxStatus: deriveTaxStatus(ves?.taxStatus),
     taxExpiry: ves?.taxDueDate || null,
+    taxArtEnd: ves?.artEndDate || null,
     taxClass: null,
     firstRegistered:
       toIsoDate(mot?.firstUsedDate) ||

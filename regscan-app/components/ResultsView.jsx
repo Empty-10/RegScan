@@ -77,6 +77,24 @@ function buildModel(v) {
     { k: "Vehicle colour", v: v.colour || "—" },
   ];
   if (v.markedForExport) specs.push({ k: "Marked for export", v: "Yes" });
+  // Optional DVLA VES extras — only shown when present, to avoid clutter.
+  if (v.realDrivingEmissions) specs.push({ k: "Real Driving Emissions (RDE)", v: String(v.realDrivingEmissions) });
+  if (v.revenueWeight) specs.push({ k: "Revenue weight", v: `${v.revenueWeight.toLocaleString()} kg` });
+  if (v.taxArtEnd) specs.push({ k: "Additional-rate tax until", v: formatDate(v.taxArtEnd) });
+
+  // Trust signal: surface any registration the car carried at a past MOT that
+  // differs from its current plate (private-plate transfer, or a possible clone).
+  const curPlate = String(v.vrm || "").replace(/\s+/g, "").toUpperCase();
+  const priorPlates = [
+    ...new Set(
+      (v.motTests || [])
+        .map((t) => String(t.registrationAtTest || "").replace(/\s+/g, "").toUpperCase())
+        .filter((p) => p && p !== curPlate)
+    ),
+  ];
+  if (priorPlates.length) {
+    specs.push({ k: "Previous registration", v: priorPlates.join(", ") });
+  }
 
   const mileage = (v.motTests || [])
     .filter((t) => t.mileage != null)
@@ -102,12 +120,16 @@ function buildModel(v) {
       t.result === "fail"
         ? `${fails} ${fails === 1 ? "failure" : "failures"}`
         : `${adv} ${adv === 1 ? "advisory" : "advisories"}`;
+    const plateAtTest = String(t.registrationAtTest || "").replace(/\s+/g, "").toUpperCase();
     return {
       date: formatDate(t.date),
       result: t.result,
       mileage: t.mileage != null ? t.mileage.toLocaleString() : "—",
       items: t.defects,
       detailLabel,
+      testNumber: t.testNumber || null,
+      expiry: t.expiryDate ? formatDate(t.expiryDate, { short: true }) : null,
+      plateAtTest: plateAtTest && plateAtTest !== curPlate ? t.registrationAtTest : null,
     };
   });
 
@@ -280,9 +302,17 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                 {airQuality && (
                   <div className="spec-row">
                     <span className="k">
-                      London air quality{airQuality.band ? ` · ${airQuality.band}` : ""}
+                      London air quality today{airQuality.band ? ` · ${airQuality.band}` : ""}
                     </span>
                     <span className="v">{airQuality.summary || "—"}</span>
+                  </div>
+                )}
+                {airQuality && airQuality.future && (
+                  <div className="spec-row">
+                    <span className="k">
+                      Air quality forecast{airQuality.future.band ? ` · ${airQuality.future.band}` : ""}
+                    </span>
+                    <span className="v">{airQuality.future.summary || "—"}</span>
                   </div>
                 )}
               </div>
@@ -433,6 +463,13 @@ function MotRow({ test, unit, defaultOpen }) {
                   <span className="tag">{d.type === "advisory" ? "Advisory" : "Failure"}</span>
                 </div>
               ))}
+            </div>
+          )}
+          {(test.testNumber || test.expiry || test.plateAtTest) && (
+            <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 12, display: "flex", flexWrap: "wrap", gap: "4px 10px" }}>
+              {test.testNumber && <span>Certificate {test.testNumber}</span>}
+              {isPass && test.expiry && <span>· MOT valid to {test.expiry}</span>}
+              {test.plateAtTest && <span>· Tested as {test.plateAtTest}</span>}
             </div>
           )}
         </div>
