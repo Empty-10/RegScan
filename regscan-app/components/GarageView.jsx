@@ -7,6 +7,7 @@ import { GarageHeader } from "./Header";
 import { Footer } from "./Footer";
 import { PlateInput, Toast, StatusBadge, statusForMot, statusForTax } from "./ui";
 import { mockVehicles, daysUntil, formatDate } from "@/lib/mockData";
+import { REMINDERS_ENABLED } from "@/lib/features";
 
 export default function GarageView() {
   const seed = ["LF19XKM", "EV70RUN", "VN64WRK"].map((k) => mockVehicles[k]).filter(Boolean);
@@ -96,7 +97,7 @@ export default function GarageView() {
             <div className="stat">
               <div className="k">Due in 30 days</div>
               <div className="v" style={{ color: "var(--amber-ink)" }}>{expiring}</div>
-              <div className="sub">Reminders queued</div>
+              <div className="sub">{REMINDERS_ENABLED ? "Reminders queued" : "Action soon"}</div>
             </div>
             <div className="stat">
               <div className="k">Expired</div>
@@ -131,21 +132,23 @@ export default function GarageView() {
         </div>
 
         {/* Reminders explainer panel */}
-        <div className="card" style={{ padding: 28, marginTop: 36, display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 32, alignItems: "center" }}>
-          <div>
-            <span className="eyebrow"><Icon name="bell" size={14} /> Reminder settings</span>
-            <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>How reminders work</h3>
-            <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 14.5, lineHeight: 1.6 }}>
-              We email you at sensible intervals before your MOT or tax falls due. You can toggle email or (soon) SMS per vehicle from the card. One‑click unsubscribe lives in every email.
-            </p>
+        {REMINDERS_ENABLED && (
+          <div className="card" style={{ padding: 28, marginTop: 36, display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 32, alignItems: "center" }}>
+            <div>
+              <span className="eyebrow"><Icon name="bell" size={14} /> Reminder settings</span>
+              <h3 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em" }}>How reminders work</h3>
+              <p style={{ color: "var(--ink-2)", marginTop: 8, fontSize: 14.5, lineHeight: 1.6 }}>
+                We email you at sensible intervals before your MOT or tax falls due. You can toggle email or (soon) SMS per vehicle from the card. One‑click unsubscribe lives in every email.
+              </p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              <ReminderTimingTile day="30" label="First nudge" />
+              <ReminderTimingTile day="14" label="Two-week" />
+              <ReminderTimingTile day="7" label="One-week" />
+              <ReminderTimingTile day="1" label="Final reminder" intense />
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            <ReminderTimingTile day="30" label="First nudge" />
-            <ReminderTimingTile day="14" label="Two-week" />
-            <ReminderTimingTile day="7" label="One-week" />
-            <ReminderTimingTile day="1" label="Final reminder" intense />
-          </div>
-        </div>
+        )}
       </main>
 
       <Footer />
@@ -210,29 +213,33 @@ function VehicleCard({ v, onRemove, onToggleReminder }) {
         )}
       </div>
 
-      <div className="tags">
-        <button
-          onClick={() => onToggleReminder(v.vrm, "email")}
-          className="badge"
-          style={{ cursor: "pointer", border: "1px solid", background: v.reminders?.email ? "var(--green-tint)" : "#F0F1F2", color: v.reminders?.email ? "var(--green)" : "var(--ink-3)", borderColor: v.reminders?.email ? "#BDE3CD" : "#E0E2E4" }}
-        >
-          <Icon name="mail" size={11} /> Email {v.reminders?.email ? "on" : "off"}
-        </button>
-        <button
-          onClick={() => onToggleReminder(v.vrm, "sms")}
-          className="badge"
-          style={{ cursor: "pointer", border: "1px solid", background: v.reminders?.sms ? "var(--green-tint)" : "#F0F1F2", color: v.reminders?.sms ? "var(--green)" : "var(--ink-3)", borderColor: v.reminders?.sms ? "#BDE3CD" : "#E0E2E4" }}
-        >
-          <Icon name="phone" size={11} /> SMS {v.reminders?.sms ? "on" : "off (soon)"}
-        </button>
-      </div>
+      {REMINDERS_ENABLED && (
+        <div className="tags">
+          <button
+            onClick={() => onToggleReminder(v.vrm, "email")}
+            className="badge"
+            style={{ cursor: "pointer", border: "1px solid", background: v.reminders?.email ? "var(--green-tint)" : "#F0F1F2", color: v.reminders?.email ? "var(--green)" : "var(--ink-3)", borderColor: v.reminders?.email ? "#BDE3CD" : "#E0E2E4" }}
+          >
+            <Icon name="mail" size={11} /> Email {v.reminders?.email ? "on" : "off"}
+          </button>
+          <button
+            onClick={() => onToggleReminder(v.vrm, "sms")}
+            className="badge"
+            style={{ cursor: "pointer", border: "1px solid", background: v.reminders?.sms ? "var(--green-tint)" : "#F0F1F2", color: v.reminders?.sms ? "var(--green)" : "var(--ink-3)", borderColor: v.reminders?.sms ? "#BDE3CD" : "#E0E2E4" }}
+          >
+            <Icon name="phone" size={11} /> SMS {v.reminders?.sms ? "on" : "off (soon)"}
+          </button>
+        </div>
+      )}
 
       <div className="actions">
         <div className="l">
           <Link href={`/check?vrm=${v.vrm.replace(/\s/g, "")}&type=car`} className="btn btn-blue btn-sm">View details</Link>
-          <button className="btn btn-secondary btn-sm">
-            <Icon name="bell" size={14} /> Manage reminders
-          </button>
+          {REMINDERS_ENABLED && (
+            <button className="btn btn-secondary btn-sm">
+              <Icon name="bell" size={14} /> Manage reminders
+            </button>
+          )}
         </div>
         <button className="btn btn-ghost btn-sm" style={{ color: "var(--ink-3)" }}>
           <Icon name="edit" size={14} />

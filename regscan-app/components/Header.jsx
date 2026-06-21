@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
+import { REMINDERS_ENABLED } from "@/lib/features";
 
 export function Header({ active }) {
   return (
@@ -15,7 +16,9 @@ export function Header({ active }) {
           </Link>
           <nav className="nav" aria-label="Primary">
             <Link href="/#how" className={"nav-link" + (active === "how" ? " active" : "")}>How it works</Link>
-            <Link href="/#reminders" className={"nav-link" + (active === "reminders" ? " active" : "")}>Reminders</Link>
+            {REMINDERS_ENABLED && (
+              <Link href="/#reminders" className={"nav-link" + (active === "reminders" ? " active" : "")}>Reminders</Link>
+            )}
             <Link href="/garage" className={"nav-link" + (active === "garage" ? " active" : "")}>My Garage</Link>
             <Link href="/#faq" className={"nav-link" + (active === "faq" ? " active" : "")}>FAQs</Link>
           </nav>
@@ -42,7 +45,7 @@ export function GarageHeader() {
           <nav className="nav">
             <Link href="/" className="nav-link">Home</Link>
             <Link href="/garage" className="nav-link active">My Garage</Link>
-            <Link href="/#reminders" className="nav-link">Reminders</Link>
+            {REMINDERS_ENABLED && <Link href="/#reminders" className="nav-link">Reminders</Link>}
             <Link href="/#faq" className="nav-link">Help</Link>
           </nav>
           <div className="header-cta" style={{ position: "relative" }}>
@@ -56,9 +59,11 @@ export function GarageHeader() {
                 <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", textDecoration: "none", color: "var(--ink)", borderRadius: 8, fontSize: 14 }}>
                   <Icon name="user" size={16} /> Account settings
                 </a>
-                <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", textDecoration: "none", color: "var(--ink)", borderRadius: 8, fontSize: 14 }}>
-                  <Icon name="bell" size={16} /> Reminder preferences
-                </a>
+                {REMINDERS_ENABLED && (
+                  <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", textDecoration: "none", color: "var(--ink)", borderRadius: 8, fontSize: 14 }}>
+                    <Icon name="bell" size={16} /> Reminder preferences
+                  </a>
+                )}
                 <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", textDecoration: "none", color: "var(--ink)", borderRadius: 8, fontSize: 14 }}>
                   <Icon name="settings" size={16} /> Privacy &amp; data
                 </a>

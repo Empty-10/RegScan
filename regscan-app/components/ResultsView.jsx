@@ -8,6 +8,7 @@ import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
 import { getVehicle, computeHealth, formatDate } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
+import { REMINDERS_ENABLED } from "@/lib/features";
 
 const titleCase = (s) =>
   String(s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -50,8 +51,10 @@ function buildModel(v) {
     v.ulez && v.ulez.chargeable
       ? { kind: "warn", icon: "alert-triangle", title: "ULEZ charges apply", meta: v.ulez.note }
       : { kind: "good", icon: "check", title: "ULEZ compliant", meta: "No daily charge" },
-    { kind: "good", icon: "check", title: "Reminder enabled", meta: "30 days before MOT" },
   ];
+  if (REMINDERS_ENABLED) {
+    compliance.push({ kind: "good", icon: "check", title: "Reminder enabled", meta: "30 days before MOT" });
+  }
 
   if (v.hasOutstandingRecall) {
     compliance.unshift({
@@ -367,15 +370,17 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
         </div>
 
         {/* REMINDERS CTA */}
-        <section className="cta-band">
-          <div className="container">
-            <h2>Never miss an MOT or tax deadline</h2>
-            <p>Free email reminders at 30, 14 and 1 day before. No account required.</p>
-            <button className="btn btn-primary btn-lg" onClick={() => setToast("Reminder set — we'll email you")}>
-              <Icon name="bell" size={18} /> Set free reminder
-            </button>
-          </div>
-        </section>
+        {REMINDERS_ENABLED && (
+          <section className="cta-band">
+            <div className="container">
+              <h2>Never miss an MOT or tax deadline</h2>
+              <p>Free email reminders at 30, 14 and 1 day before. No account required.</p>
+              <button className="btn btn-primary btn-lg" onClick={() => setToast("Reminder set — we'll email you")}>
+                <Icon name="bell" size={18} /> Set free reminder
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* SMART NEXT STEPS */}
         <section className="section section-white">

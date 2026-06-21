@@ -7,7 +7,7 @@ export const metadata = {
     template: "%s | RegScan",
   },
   description:
-    "Free instant MOT and tax checks using official UK DVSA and DVLA data. Set free reminders so you never miss an MOT or tax due date.",
+    "Free instant MOT and tax checks using official UK DVSA and DVLA data. See live MOT status, full MOT history and current tax status in seconds.",
   openGraph: {
     type: "website",
     siteName: "RegScan",

@@ -7,6 +7,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { FaqItem } from "./ui";
 import { ARTICLE, SECTIONS, FAQS, RELATED } from "@/lib/articleData";
+import { REMINDERS_ENABLED } from "@/lib/features";
 
 function ArticleByline() {
   return (
@@ -169,15 +170,17 @@ export default function ArticleView() {
         </div>
       </section>
 
-      <section className="cta-band">
-        <div className="container">
-          <h2>Never miss your MOT or tax deadline</h2>
-          <p>Free reminders at 30, 14 and 1 day before. No account needed.</p>
-          <Link href="/garage" className="btn btn-primary btn-lg">
-            <Icon name="bell" size={18} /> Set free reminder <Icon name="arrow-right" size={16} />
-          </Link>
-        </div>
-      </section>
+      {REMINDERS_ENABLED && (
+        <section className="cta-band">
+          <div className="container">
+            <h2>Never miss your MOT or tax deadline</h2>
+            <p>Free reminders at 30, 14 and 1 day before. No account needed.</p>
+            <Link href="/garage" className="btn btn-primary btn-lg">
+              <Icon name="bell" size={18} /> Set free reminder <Icon name="arrow-right" size={16} />
+            </Link>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </>

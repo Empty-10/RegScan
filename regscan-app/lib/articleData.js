@@ -68,7 +68,7 @@ export const FAQS = [
   },
   {
     q: "How do I check my MOT advisories online?",
-    a: "Enter your registration into RegScan and you’ll see your full MOT history, including every advisory and failure recorded against the vehicle, pulled directly from the official DVSA data. It’s free, and you can set a reminder so you never miss the renewal date.",
+    a: "Enter your registration into RegScan and you’ll see your full MOT history, including every advisory and failure recorded against the vehicle, pulled directly from the official DVSA data. It’s free to check as often as you like.",
   },
   {
     q: "Will an advisory affect my insurance?",
