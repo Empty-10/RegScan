@@ -231,6 +231,8 @@ export function computeHealth(v) {
 
   if (v.ulez && v.ulez.chargeable) { score -= 3; reasons.push("ULEZ chargeable"); }
 
+  if (v.hasOutstandingRecall) { score -= 15; reasons.push("Outstanding safety recall"); }
+
   score = Math.max(0, Math.min(100, Math.round(score)));
   const state = score >= 80 ? "Good standing" : score >= 50 ? "Needs attention" : "Action required";
   return { score, state, note: reasons.length ? reasons.join(" · ") : "No issues found" };

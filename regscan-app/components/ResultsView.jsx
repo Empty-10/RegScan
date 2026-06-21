@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
 import { getVehicle, computeHealth, formatDate } from "@/lib/mockData";
+import { chargeStatusNow } from "@/lib/charges";
 
 const titleCase = (s) =>
   String(s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -16,8 +17,7 @@ const monthYear = (iso) => {
   return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 };
 
-function buildModel(vrm) {
-  const v = getVehicle(vrm) || getVehicle("AB12CDE");
+function buildModel(v) {
   const health = computeHealth(v);
   const latest = v.motTests && v.motTests[0];
   const openAdvisories = latest ? latest.defects.filter((d) => d.type === "advisory") : [];
@@ -31,37 +31,52 @@ function buildModel(vrm) {
     v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : null,
   ].filter(Boolean);
 
+  const motCompliance = {
+    expired: { kind: "warn", icon: "alert-triangle", title: "MOT expired", meta: `Expired ${formatDate(v.motExpiry, { short: true })}` },
+    "due-soon": { kind: "warn", icon: "alert-triangle", title: "MOT due soon", meta: `Expires ${formatDate(v.motExpiry, { short: true })}` },
+    valid: { kind: "good", icon: "check", title: "MOT valid", meta: `Expires ${formatDate(v.motExpiry, { short: true })}` },
+    unknown: { kind: "warn", icon: "alert-triangle", title: "MOT status unknown", meta: "No MOT history found" },
+  };
+  const taxCompliance = {
+    expired: { kind: "warn", icon: "alert-triangle", title: "Untaxed", meta: `Expired ${formatDate(v.taxExpiry, { short: true })}` },
+    sorn: { kind: "warn", icon: "alert-triangle", title: "SORN declared", meta: "Off the road" },
+    valid: { kind: "good", icon: "check", title: "Tax active", meta: `Renews ${formatDate(v.taxExpiry, { short: true })}` },
+    unknown: { kind: "warn", icon: "alert-triangle", title: "Tax status unknown", meta: "DVLA data unavailable" },
+  };
+
   const compliance = [
-    {
-      kind: v.motStatus === "expired" ? "warn" : "good",
-      icon: v.motStatus === "expired" ? "alert-triangle" : "check",
-      title: v.motStatus === "expired" ? "MOT expired" : "MOT valid",
-      meta: `${v.motStatus === "expired" ? "Expired" : "Expires"} ${formatDate(v.motExpiry, { short: true })}`,
-    },
-    {
-      kind: v.taxStatus === "expired" ? "warn" : "good",
-      icon: v.taxStatus === "expired" ? "alert-triangle" : "check",
-      title: v.taxStatus === "expired" ? "Tax expired" : "Tax active",
-      meta: `${v.taxStatus === "expired" ? "Expired" : "Renews"} ${formatDate(v.taxExpiry, { short: true })}`,
-    },
+    motCompliance[v.motStatus] || motCompliance.unknown,
+    taxCompliance[v.taxStatus] || taxCompliance.unknown,
     v.ulez && v.ulez.chargeable
       ? { kind: "warn", icon: "alert-triangle", title: "ULEZ charges apply", meta: v.ulez.note }
       : { kind: "good", icon: "check", title: "ULEZ compliant", meta: "No daily charge" },
     { kind: "good", icon: "check", title: "Reminder enabled", meta: "30 days before MOT" },
   ];
 
+  if (v.hasOutstandingRecall) {
+    compliance.unshift({
+      kind: "warn",
+      icon: "alert-triangle",
+      title: "Safety recall outstanding",
+      meta: "Manufacturer recall not yet resolved",
+    });
+  }
+
   const specs = [
     { k: "Fuel type", v: titleCase(v.fuel) },
     { k: "Engine size", v: v.engineCc ? `${v.engineCc.toLocaleString()} cc` : "—" },
     { k: "CO₂ emissions", v: v.co2 != null ? `${v.co2} g/km` : "—" },
     { k: "Euro emissions standard", v: v.euroStatus || "—" },
+    { k: "Type approval category", v: v.typeApproval || "—" },
     { k: "Body type", v: v.bodyType || "—" },
     { k: "Number of doors", v: v.doors != null ? String(v.doors) : "—" },
     { k: "Date first registered", v: formatDate(v.firstRegistered) },
+    { k: "V5C (log book) last issued", v: v.v5cIssued ? formatDate(v.v5cIssued) : "—" },
     { k: "Previous keepers", v: v.previousKeepers != null ? String(v.previousKeepers) : "—" },
     { k: "Wheelplan", v: v.wheelplan || "—" },
     { k: "Vehicle colour", v: v.colour || "—" },
   ];
+  if (v.markedForExport) specs.push({ k: "Marked for export", v: "Yes" });
 
   const mileage = (v.motTests || [])
     .filter((t) => t.mileage != null)
@@ -107,14 +122,45 @@ function buildModel(vrm) {
     compliance,
     specs,
     mileage,
+    mileageUnit: v.mileageUnit || "mi",
+    recall: !!v.hasOutstandingRecall,
     advisories,
     history,
   };
 }
 
-export default function ResultsView({ vrm }) {
-  const m = useMemo(() => buildModel(vrm), [vrm]);
+export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
+  // Prefer server-fetched data; fall back to the mock so the app runs without keys.
+  const v = vehicle || getVehicle(vrm) || (notFound ? null : getVehicle("AB12CDE"));
+  const m = useMemo(() => (v ? buildModel(v) : null), [v]);
   const [toast, setToast] = useState(null);
+  // Charge status depends on the current time, so compute on the client after mount
+  // to keep it accurate and avoid a server/client hydration mismatch.
+  const [charges, setCharges] = useState(null);
+  useEffect(() => setCharges(chargeStatusNow()), []);
+
+  if (!m) {
+    return (
+      <>
+        <Header active="home" />
+        <main className="results-page">
+          <div className="container">
+            <div className="vehicle-profile" style={{ textAlign: "center", padding: "48px 24px" }}>
+              <h1 className="vp-name">No vehicle found</h1>
+              <p style={{ color: "var(--ink-3)", marginTop: 8 }}>
+                We couldn&apos;t find a vehicle with the registration{" "}
+                <strong>{vrm}</strong>. Check the plate and try again.
+              </p>
+              <div style={{ marginTop: 20 }}>
+                <Link href="/" className="btn btn-primary">Back to search</Link>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -154,6 +200,12 @@ export default function ResultsView({ vrm }) {
                     <span className="vp-verdict warn">
                       <Icon name="alert-triangle" size={14} stroke={2.25} />
                       {m.advisoryCount} advisor{m.advisoryCount === 1 ? "y" : "ies"} due soon
+                    </span>
+                  )}
+                  {m.recall && (
+                    <span className="vp-verdict warn">
+                      <Icon name="alert-triangle" size={14} stroke={2.25} />
+                      Safety recall outstanding
                     </span>
                   )}
                 </div>
@@ -208,6 +260,35 @@ export default function ResultsView({ vrm }) {
             </div>
           </section>
 
+          {/* LONDON CHARGE ZONES & AIR QUALITY */}
+          {(charges || airQuality) && (
+            <section className="results-section">
+              <h2>London charge zones &amp; air quality</h2>
+              <div className="spec-card">
+                {charges && (
+                  <>
+                    <div className="spec-row">
+                      <span className="k">Congestion Charge</span>
+                      <span className="v">{charges.congestion.note}</span>
+                    </div>
+                    <div className="spec-row">
+                      <span className="k">ULEZ</span>
+                      <span className="v">{charges.ulez.note}</span>
+                    </div>
+                  </>
+                )}
+                {airQuality && (
+                  <div className="spec-row">
+                    <span className="k">
+                      London air quality{airQuality.band ? ` · ${airQuality.band}` : ""}
+                    </span>
+                    <span className="v">{airQuality.summary || "—"}</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* ADVISORIES */}
           {m.advisories.length > 0 && (
             <section className="results-section">
@@ -248,7 +329,7 @@ export default function ResultsView({ vrm }) {
             <div className="timeline-card" style={{ marginTop: 20 }}>
               <div className="timeline">
                 {m.history.map((t, i) => (
-                  <MotRow key={i} test={t} defaultOpen={i === 0} />
+                  <MotRow key={i} test={t} unit={m.mileageUnit} defaultOpen={i === 0} />
                 ))}
               </div>
             </div>
@@ -314,9 +395,10 @@ export default function ResultsView({ vrm }) {
   );
 }
 
-function MotRow({ test, defaultOpen }) {
+function MotRow({ test, unit, defaultOpen }) {
   const [open, setOpen] = useState(!!defaultOpen);
   const isPass = test.result === "pass";
+  const unitLabel = unit === "km" ? "km" : "miles";
   return (
     <div className={"tl-item " + (isPass ? "" : "fail") + (open ? " expanded" : "")}>
       <div className="marker">
@@ -326,7 +408,7 @@ function MotRow({ test, defaultOpen }) {
         <div>
           <div className="date">{test.date}</div>
           <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 4 }}>
-            {test.mileage} miles · {test.detailLabel}
+            {test.mileage}{test.mileage !== "—" ? ` ${unitLabel}` : ""} · {test.detailLabel}
           </div>
         </div>
         <div className="stat">
