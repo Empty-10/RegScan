@@ -5,10 +5,15 @@ import path from "node:path";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 const PAGES_DIR = path.join(process.cwd(), "content", "pages");
+const SUMMARIES = path.join(process.cwd(), "content", "summaries.json");
 
 export const SITE_URL = "https://www.regscan.co.uk";
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
+
+// Hand-written answer-first summaries (slug -> text), merged onto each post.
+const summaries = fs.existsSync(SUMMARIES) ? readJson(SUMMARIES) : {};
+const withSummary = (post) => (post ? { ...post, summary: summaries[post.slug] || null } : post);
 
 export function getAllPosts() {
   if (!fs.existsSync(POSTS_DIR)) return [];
@@ -17,7 +22,7 @@ export function getAllPosts() {
     const dir = path.join(POSTS_DIR, cat);
     if (!fs.statSync(dir).isDirectory()) continue;
     for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-      posts.push(readJson(path.join(dir, file)));
+      posts.push(withSummary(readJson(path.join(dir, file))));
     }
   }
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
@@ -25,7 +30,7 @@ export function getAllPosts() {
 
 export function getPost(categorySlug, slug) {
   const p = path.join(POSTS_DIR, categorySlug, `${slug}.json`);
-  return fs.existsSync(p) ? readJson(p) : null;
+  return fs.existsSync(p) ? withSummary(readJson(p)) : null;
 }
 
 export function getPostsByCategory(categorySlug) {

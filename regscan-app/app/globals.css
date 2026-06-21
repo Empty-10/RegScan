@@ -1794,3 +1794,22 @@ p { margin: 0; line-height: 1.55; }
 .post-cta p { font-size: 14.5px; color: var(--slate-ink-2); margin: 0; max-width: 460px; }
 .post-related { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 24px; }
 .post-related h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+.post-byline { font-weight: 700; color: var(--ink-2); }
+.post-trust {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--green); font-weight: 600; margin: 0 0 22px;
+}
+.post-trust::before {
+  content: ""; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green-tint); border: 2px solid var(--green); flex: none;
+}
+.post-answer {
+  background: var(--blue-tint); border: 1px solid #CFE0F5;
+  border-left: 4px solid var(--blue); border-radius: var(--radius-md);
+  padding: 16px 20px; margin: 0 0 28px;
+}
+.post-answer-label {
+  display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 4px;
+}
+.post-answer p { margin: 0; font-size: 16.5px; line-height: 1.55; color: var(--ink); font-weight: 500; }

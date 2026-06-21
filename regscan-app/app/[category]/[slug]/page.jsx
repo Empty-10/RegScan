@@ -30,7 +30,8 @@ export function generateMetadata({ params }) {
   const post = getPost(params.category, params.slug);
   if (!post) return {};
   const title = cleanText(post.title);
-  const description = excerptText(post.excerpt || post.contentHtml);
+  // Prefer the hand-written answer-first summary for the meta description.
+  const description = post.summary ? excerptText(post.summary, 160) : excerptText(post.excerpt || post.contentHtml);
   const url = `${SITE_URL}${post.pathname}`;
   const images = post.featuredImage ? [`${SITE_URL}${post.featuredImage}`] : undefined;
   return {
@@ -80,8 +81,13 @@ export default function Page({ params }) {
     dateModified: post.modified || post.date,
     mainEntityOfPage: url,
     image: post.featuredImage ? [`${SITE_URL}${post.featuredImage}`] : undefined,
-    author: { "@type": "Organization", name: "RegScan" },
-    publisher: { "@type": "Organization", name: "RegScan" },
+    author: { "@type": "Organization", name: "RegScan", url: `${SITE_URL}/` },
+    publisher: {
+      "@type": "Organization",
+      name: "RegScan",
+      url: `${SITE_URL}/`,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` },
+    },
   };
 
   const breadcrumbLd = {
@@ -110,11 +116,19 @@ export default function Page({ params }) {
           <article>
             <h1 className="post-title">{title}</h1>
             <div className="post-meta">
-              <span>Published {fmtDate(post.date)}</span>
+              <span className="post-byline">By the RegScan team</span>
+              <span> · Published {fmtDate(post.date)}</span>
               {post.modified && post.modified !== post.date && (
                 <span> · Updated {fmtDate(post.modified)}</span>
               )}
             </div>
+            <div className="post-trust">Checked against official DVSA &amp; DVLA guidance</div>
+            {post.summary && (
+              <div className="post-answer">
+                <span className="post-answer-label">Quick answer</span>
+                <p>{post.summary}</p>
+              </div>
+            )}
             {post.featuredImage && (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img className="post-hero" src={post.featuredImage} alt={post.featuredAlt || title} />
