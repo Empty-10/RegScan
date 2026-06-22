@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
-import { getVehicle, computeHealth, formatDate, makeLogoSrc } from "@/lib/mockData";
+import { getVehicle, computeHealth, formatDate, makeLogoSrc, recurringAdvisoryCount } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED } from "@/lib/features";
 
@@ -23,6 +23,32 @@ function buildModel(v) {
   const latest = v.motTests && v.motTests[0];
   const openAdvisories = latest ? latest.defects.filter((d) => d.type === "advisory") : [];
   const roadLegal = v.motStatus !== "expired" && v.taxStatus !== "expired";
+
+  // At-a-glance verdict chips — positive (green) when good, amber when not.
+  const hasHistory = (v.motTests || []).length > 0;
+  const recurring = recurringAdvisoryCount(v);
+  const verdicts = [
+    roadLegal
+      ? { kind: "good", icon: "shield-check", label: "Road legal" }
+      : { kind: "bad", icon: "alert-triangle", label: "Not road legal" },
+  ];
+  if (hasHistory) {
+    verdicts.push(
+      openAdvisories.length
+        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT` }
+        : { kind: "good", icon: "check", label: "No advisories on last MOT" }
+    );
+    verdicts.push(
+      recurring
+        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}` }
+        : { kind: "good", icon: "check", label: "No recurring advisories" }
+    );
+  }
+  verdicts.push(
+    v.hasOutstandingRecall
+      ? { kind: "warn", icon: "alert-triangle", label: "Safety recall outstanding" }
+      : { kind: "good", icon: "check", label: "No active recalls" }
+  );
 
   const meta = [
     v.colour,
@@ -140,6 +166,7 @@ function buildModel(v) {
     vrm: v.vrm,
     monogram: v.monogram,
     logoSrc: makeLogoSrc(v.make),
+    verdicts,
     name: `${titleCase(v.make)} ${v.model}`,
     meta,
     health,
@@ -223,22 +250,12 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   ))}
                 </div>
                 <div className="vp-verdicts">
-                  <span className={"vp-verdict " + (m.roadLegal ? "good" : "warn")}>
-                    <Icon name={m.roadLegal ? "shield-check" : "alert-triangle"} size={15} stroke={2.25} />
-                    {m.roadLegal ? "Road legal" : "Not road legal"}
-                  </span>
-                  {m.advisoryCount > 0 && (
-                    <span className="vp-verdict warn">
-                      <Icon name="alert-triangle" size={14} stroke={2.25} />
-                      {m.advisoryCount} advisor{m.advisoryCount === 1 ? "y" : "ies"} due soon
+                  {m.verdicts.map((vd, i) => (
+                    <span key={i} className={"vp-verdict " + vd.kind}>
+                      <Icon name={vd.icon} size={14} stroke={2.25} />
+                      {vd.label}
                     </span>
-                  )}
-                  {m.recall && (
-                    <span className="vp-verdict warn">
-                      <Icon name="alert-triangle" size={14} stroke={2.25} />
-                      Safety recall outstanding
-                    </span>
-                  )}
+                  ))}
                 </div>
               </div>
 

@@ -1362,6 +1362,7 @@ p { margin: 0; line-height: 1.55; }
 }
 .vp-verdict.good { background: var(--green-tint); color: var(--green); border-color: #BDDFC8; }
 .vp-verdict.warn { background: var(--amber-tint); color: var(--amber-ink); border-color: #F0DA92; }
+.vp-verdict.bad { background: #FBE9EA; color: var(--red); border-color: #EFBEC3; }
 
 /* Vehicle health module */
 .vp-health {

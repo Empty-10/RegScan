@@ -231,6 +231,21 @@ function defectSignature(text) {
   return String(text).toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ").slice(0, 5).join(" ");
 }
 
+// Count of distinct defects that recur across 2+ MOT tests (same rule code / text).
+export function recurringAdvisoryCount(v) {
+  const sigCounts = {};
+  (v.motTests || []).forEach((t) => {
+    const seen = new Set();
+    (t.defects || []).forEach((d) => {
+      const sig = defectSignature(d.text);
+      if (!sig || seen.has(sig)) return;
+      seen.add(sig);
+      sigCounts[sig] = (sigCounts[sig] || 0) + 1;
+    });
+  });
+  return Object.values(sigCounts).filter((c) => c >= 2).length;
+}
+
 // Transparent, defensible Vehicle Health score (replaces the prototype's hardcoded 82).
 // Starts at 100 and deducts across four capped categories so the number can always
 // be justified, with each deduction producing a plain-English reason:
@@ -290,17 +305,7 @@ export function computeHealth(v) {
   }
 
   // --- 4. Patterns: recurring advisories + mileage integrity ---
-  const sigCounts = {};
-  tests.forEach((t) => {
-    const seen = new Set();
-    (t.defects || []).forEach((d) => {
-      const sig = defectSignature(d.text);
-      if (!sig || seen.has(sig)) return; // count each issue once per test
-      seen.add(sig);
-      sigCounts[sig] = (sigCounts[sig] || 0) + 1;
-    });
-  });
-  const recurring = Object.values(sigCounts).filter((c) => c >= 2).length;
+  const recurring = recurringAdvisoryCount(v);
   if (recurring) {
     score -= Math.min(recurring * 4, 12);
     reasons.push(`${recurring} recurring advisor${recurring > 1 ? "ies" : "y"}`);
