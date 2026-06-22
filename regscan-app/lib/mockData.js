@@ -180,7 +180,16 @@ export const mockVehicles = {
   },
 };
 
+import carLogos from "./carLogos.json";
+
 const norm = (vrm) => String(vrm || "").replace(/\s+/g, "").toUpperCase();
+
+// Resolve a make name to a self-hosted logo path, or null to fall back to the
+// monogram. Normalises e.g. "MERCEDES-BENZ" / "Land Rover" -> slug.
+export function makeLogoSrc(make) {
+  const slug = String(make || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return slug && carLogos.includes(slug) ? `/logos/${slug}.png` : null;
+}
 
 // Stub API — mirrors a server-side DVSA + DVLA lookup.
 export async function fetchMotAndTaxByVRM(vrm) {

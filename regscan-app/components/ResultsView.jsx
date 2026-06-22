@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
-import { getVehicle, computeHealth, formatDate } from "@/lib/mockData";
+import { getVehicle, computeHealth, formatDate, makeLogoSrc } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED } from "@/lib/features";
 
@@ -139,6 +139,7 @@ function buildModel(v) {
   return {
     vrm: v.vrm,
     monogram: v.monogram,
+    logoSrc: makeLogoSrc(v.make),
     name: `${titleCase(v.make)} ${v.model}`,
     meta,
     health,
@@ -204,7 +205,12 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
             <div className="vp-main">
               <div className="vp-identity">
                 <div className="vp-plate-row">
-                  <span className="vp-monogram" aria-hidden="true">{m.monogram}</span>
+                  {m.logoSrc ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img className="vp-logo" src={m.logoSrc} alt={`${m.name.split(" ")[0]} logo`} />
+                  ) : (
+                    <span className="vp-monogram" aria-hidden="true">{m.monogram}</span>
+                  )}
                   <span className="plate plate-lg">{m.vrm}</span>
                 </div>
                 <h1 className="vp-name">{m.name}</h1>

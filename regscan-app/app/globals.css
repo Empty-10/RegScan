@@ -1893,3 +1893,11 @@ p { margin: 0; line-height: 1.55; }
 
 /* Brand logo image (replaces the R mark + wordmark lockup) */
 .brand-logo { height: 30px; width: auto; display: block; }
+
+/* Make/manufacturer logo on the vehicle profile (falls back to .vp-monogram) */
+.vp-logo {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: #fff; border: 1px solid var(--line);
+  object-fit: contain; padding: 7px; flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
