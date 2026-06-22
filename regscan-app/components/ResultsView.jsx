@@ -18,6 +18,14 @@ const monthYear = (iso) => {
   return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 };
 
+// Interpreted ratings for the metric cards.
+const ageRating = (y) =>
+  y == null ? null : y <= 3 ? { label: "New", kind: "good" } : y <= 7 ? { label: "Average", kind: "good" } : y <= 12 ? { label: "Getting on", kind: "warn" } : { label: "Old", kind: "bad" };
+const yearlyRating = (m) =>
+  m == null ? null : m < 6000 ? { label: "Low", kind: "good" } : m < 10000 ? { label: "Average", kind: "good" } : m < 15000 ? { label: "High", kind: "warn" } : { label: "Very high", kind: "bad" };
+const mileageRating = (actual, expected) =>
+  actual == null || !expected ? null : actual < expected * 0.6 ? { label: "Low", kind: "good" } : actual < expected * 1.1 ? { label: "Average", kind: "good" } : actual < expected * 1.5 ? { label: "High", kind: "warn" } : { label: "Very high", kind: "bad" };
+
 function buildModel(v) {
   const health = computeHealth(v);
   const latest = v.motTests && v.motTests[0];
@@ -57,6 +65,47 @@ function buildModel(v) {
       ? { kind: "warn", icon: "alert-triangle", label: "Safety recall outstanding" }
       : { kind: "good", icon: "check", label: "No active recalls" }
   );
+
+  // --- Positives / Negatives summary (good vs needs-attention) ---
+  const positives = [];
+  const negatives = [];
+  if (v.motStatus === "valid") positives.push({ text: "MOT valid" });
+  else if (v.motStatus === "due-soon") negatives.push({ text: "MOT due soon" });
+  else if (v.motStatus === "expired") negatives.push({ text: "MOT expired" });
+  if (v.taxStatus === "valid") positives.push({ text: "Tax active" });
+  else if (v.taxStatus === "expired") negatives.push({ text: "Untaxed" });
+  else if (v.taxStatus === "sorn") negatives.push({ text: "Declared SORN" });
+  if (v.hasOutstandingRecall) negatives.push({ text: "Outstanding safety recall" });
+  else positives.push({ text: "No outstanding recalls" });
+  if (hasHistory) {
+    if (openAdvisories.length) negatives.push({ text: `${openAdvisories.length} advisories at last MOT`, scrollId: "advisories" });
+    else positives.push({ text: "No advisories at last MOT" });
+    if (recurring) negatives.push({ text: `${recurring} recurring advisories`, scrollId: "recurring-issues" });
+    else positives.push({ text: "No recurring faults" });
+    if ((v.motTests || []).some((t) => t.result === "fail")) negatives.push({ text: "Has failed an MOT before" });
+    else positives.push({ text: "Never failed an MOT" });
+  }
+  if (v.ulez && v.ulez.chargeable) negatives.push({ text: "ULEZ charges apply" });
+  else positives.push({ text: "ULEZ compliant" });
+
+  // --- Metric cards with interpreted ratings ---
+  const ageYears = v.year ? new Date().getFullYear() - v.year : null;
+  const latestMileage = (v.motTests || []).map((t) => t.mileage).find((mi) => mi != null) ?? null;
+  const unit = v.mileageUnit === "km" ? "km" : "mi";
+  const perYear = latestMileage != null && ageYears ? Math.round(latestMileage / ageYears) : null;
+  const passes = (v.motTests || []).filter((t) => t.result === "pass").length;
+  const mRating = mileageRating(latestMileage, ageYears ? ageYears * 7500 : null);
+  if (mRating && (mRating.kind === "warn" || mRating.kind === "bad")) negatives.push({ text: "High mileage for its age" });
+
+  const metrics = [];
+  if (ageYears != null) metrics.push({ icon: "calendar", label: "Age", value: `${ageYears} yr${ageYears === 1 ? "" : "s"}`, rating: ageRating(ageYears) });
+  if (latestMileage != null) metrics.push({ icon: "trending", label: "Mileage", value: `${latestMileage.toLocaleString()} ${unit}`, rating: mRating });
+  if (perYear != null) metrics.push({ icon: "trending", label: "Yearly mileage", value: `${perYear.toLocaleString()} ${unit}`, rating: yearlyRating(perYear) });
+  if (totalTests) metrics.push({ icon: "list", label: "MOT tests", value: `${totalTests}`, rating: null });
+  if (totalTests) {
+    const pct = Math.round((passes / totalTests) * 100);
+    metrics.push({ icon: "check-circle", label: "MOT pass rate", value: `${pct}%`, rating: pct >= 80 ? { label: "Good", kind: "good" } : pct >= 60 ? { label: "Mixed", kind: "warn" } : { label: "Poor", kind: "bad" } });
+  }
 
   const meta = [
     v.colour,
@@ -175,6 +224,9 @@ function buildModel(v) {
     monogram: v.monogram,
     logoSrc: makeLogoSrc(v.make),
     verdicts,
+    positives,
+    negatives,
+    metrics,
     recurring: recurringList,
     name: `${titleCase(v.make)} ${v.model}`,
     meta,
@@ -241,8 +293,12 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
             <span className="current">Vehicle check</span>
           </nav>
 
+          <div className="results-layout">
+            <ResultsNav />
+            <div className="results-main">
+
           {/* VEHICLE PROFILE — control centre */}
-          <div className="vehicle-profile">
+          <div className="vehicle-profile" id="overview" data-nav="Overview">
             <div className="vp-main">
               <div className="vp-identity">
                 <div className="vp-plate-row">
@@ -263,25 +319,34 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                     </span>
                   ))}
                 </div>
-                <div className="vp-verdicts">
-                  {m.verdicts.map((vd, i) => (
-                    <span
-                      key={i}
-                      className={"vp-verdict " + vd.kind + (vd.scrollId ? " is-link" : "")}
-                      role={vd.scrollId ? "button" : undefined}
-                      tabIndex={vd.scrollId ? 0 : undefined}
-                      onClick={vd.scrollId ? () => scrollToId(vd.scrollId) : undefined}
-                      onKeyDown={
-                        vd.scrollId
-                          ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); scrollToId(vd.scrollId); } }
-                          : undefined
-                      }
-                    >
-                      <Icon name={vd.icon} size={14} stroke={2.25} />
-                      {vd.label}
-                      {vd.title && <InfoTip text={vd.title} />}
-                    </span>
-                  ))}
+                <div className="vp-pn">
+                  <div className="vp-pn-col">
+                    <div className="vp-pn-head">
+                      Positives <span className="vp-pn-count pos">{m.positives.length}</span>
+                    </div>
+                    <ul>
+                      {m.positives.map((p, i) => (
+                        <li key={i}><span className="vp-pn-arrow pos">↑</span>{p.text}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="vp-pn-col">
+                    <div className="vp-pn-head">
+                      Negatives <span className="vp-pn-count neg">{m.negatives.length}</span>
+                    </div>
+                    <ul>
+                      {m.negatives.map((n, i) => (
+                        <li key={i}>
+                          <span className="vp-pn-arrow neg">↓</span>
+                          {n.scrollId ? (
+                            <button type="button" className="vp-pn-link" onClick={() => scrollToId(n.scrollId)}>{n.text}</button>
+                          ) : (
+                            n.text
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
 
@@ -321,8 +386,26 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
             </div>
           </div>
 
+          {/* AT A GLANCE — metric cards with ratings */}
+          {m.metrics.length > 0 && (
+            <section className="results-section" id="at-a-glance" data-nav="At a glance">
+              <h2>At a glance</h2>
+              <div className="metric-grid">
+                {m.metrics.map((mc, i) => (
+                  <div className="metric-card" key={i}>
+                    <div className="metric-top">
+                      <span className="metric-label"><Icon name={mc.icon} size={16} /> {mc.label}</span>
+                      {mc.rating && <span className={"metric-badge " + mc.rating.kind}>{mc.rating.label}</span>}
+                    </div>
+                    <div className="metric-value">{mc.value}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* VEHICLE DETAILS */}
-          <section className="results-section">
+          <section className="results-section" id="details" data-nav="Vehicle details">
             <h2>Vehicle details</h2>
             <div className="spec-card">
               {m.specs.map((s, i) => (
@@ -336,7 +419,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* LONDON CHARGE ZONES & AIR QUALITY */}
           {(charges || airQuality) && (
-            <section className="results-section">
+            <section className="results-section" id="charges" data-nav="Charges & air">
               <h2>London charge zones &amp; air quality</h2>
               <div className="spec-card">
                 {charges && (
@@ -373,7 +456,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* ADVISORIES */}
           {m.advisories.length > 0 && (
-            <section className="results-section" id="advisories">
+            <section className="results-section" id="advisories" data-nav="Advisories">
               <h2>Advisories from last MOT</h2>
               <div className="advisory-list">
                 {m.advisories.map((a, i) => (
@@ -394,7 +477,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* RECURRING ISSUES */}
           {m.recurring.length > 0 && (
-            <section className="results-section" id="recurring-issues">
+            <section className="results-section" id="recurring-issues" data-nav="Recurring issues">
               <h2>Recurring issues</h2>
               <p style={{ fontSize: 14, color: "var(--ink-3)", margin: "-4px 0 16px", maxWidth: 640 }}>
                 The same fault flagged at more than one MOT. A repeat advisory can mean a problem
@@ -420,7 +503,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* MILEAGE HISTORY */}
           {m.mileage.length > 1 && (
-            <section className="results-section">
+            <section className="results-section" id="mileage" data-nav="Mileage">
               <h2>Mileage history</h2>
               <div className="chart-card">
                 <MileageChart data={m.mileage} />
@@ -432,7 +515,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
           )}
 
           {/* MOT HISTORY TIMELINE */}
-          <section className="results-section">
+          <section className="results-section" id="mot-history" data-nav="MOT history">
             <h2>MOT history</h2>
             <div className="timeline-card" style={{ marginTop: 20 }}>
               <div className="timeline">
@@ -442,6 +525,8 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
               </div>
             </div>
           </section>
+            </div>
+          </div>
         </div>
 
         {/* REMINDERS CTA */}
@@ -502,6 +587,48 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
       <Footer />
       {toast && <Toast onDone={() => setToast(null)}>{toast}</Toast>}
     </>
+  );
+}
+
+// Sticky section nav for the results page. Builds itself from [data-nav]
+// sections in the DOM (so it auto-syncs with whatever sections render) and
+// highlights the section currently in view.
+function ResultsNav() {
+  const [items, setItems] = useState([]);
+  const [active, setActive] = useState(null);
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll("[data-nav]"));
+    const list = els.map((el) => ({ id: el.id, label: el.getAttribute("data-nav") }));
+    setItems(list);
+    const onScroll = () => {
+      let cur = list[0]?.id;
+      for (const it of list) {
+        const el = document.getElementById(it.id);
+        if (el && el.getBoundingClientRect().top <= 120) cur = it.id;
+      }
+      setActive(cur);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const go = (e, id) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <aside className="results-nav">
+      <nav className="results-nav-inner" aria-label="Sections">
+        {items.map((it) => (
+          <a key={it.id} href={`#${it.id}`} className={active === it.id ? "active" : ""} onClick={(e) => go(e, it.id)}>
+            {it.label}
+          </a>
+        ))}
+      </nav>
+    </aside>
   );
 }
 

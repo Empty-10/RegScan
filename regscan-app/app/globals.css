@@ -1927,3 +1927,49 @@ p { margin: 0; line-height: 1.55; }
 .vp-verdict.is-link { cursor: pointer; }
 .vp-verdict.is-link:hover { filter: brightness(0.97); text-decoration: underline; text-underline-offset: 2px; }
 .results-section { scroll-margin-top: 24px; }
+
+/* ---------- Results page: section sidebar layout ---------- */
+.results-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 40px; align-items: start; }
+.results-main { min-width: 0; }
+.results-nav { position: sticky; top: 24px; }
+.results-nav-inner { display: flex; flex-direction: column; gap: 1px; }
+.results-nav-inner a {
+  font-size: 14px; font-weight: 600; color: var(--ink-3); text-decoration: none;
+  padding: 8px 12px; border-left: 2px solid transparent; border-radius: 0 8px 8px 0;
+  transition: color .12s, background .12s, border-color .12s;
+}
+.results-nav-inner a:hover { color: var(--ink); background: var(--bg); }
+.results-nav-inner a.active { color: var(--blue); border-left-color: var(--blue); background: var(--blue-tint); }
+.results-section { scroll-margin-top: 24px; }
+@media (max-width: 900px) {
+  .results-layout { grid-template-columns: 1fr; gap: 0; }
+  .results-nav { display: none; }
+}
+
+/* ---------- Positives / Negatives split ---------- */
+.vp-pn { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+.vp-pn-head { font-size: 13px; font-weight: 700; color: var(--ink-2); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.vp-pn-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+.vp-pn-count.pos { background: var(--green-tint); color: var(--green); }
+.vp-pn-count.neg { background: #FBE9EA; color: var(--red); }
+.vp-pn ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.vp-pn li { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.4; color: var(--ink-2); }
+.vp-pn-arrow { font-weight: 900; line-height: 1.3; flex: none; }
+.vp-pn-arrow.pos { color: var(--green); }
+.vp-pn-arrow.neg { color: var(--red); }
+.vp-pn-link { background: none; border: none; padding: 0; font: inherit; color: var(--blue); cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+.vp-pn-link:hover { color: var(--blue-ink); }
+@media (max-width: 560px) { .vp-pn { grid-template-columns: 1fr; gap: 18px; } }
+
+/* ---------- Metric cards with rating badges ---------- */
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 720px) { .metric-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 440px) { .metric-grid { grid-template-columns: 1fr; } }
+.metric-card { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 18px 18px 16px; }
+.metric-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.metric-label { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--ink-3); }
+.metric-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-top: 10px; color: var(--ink); }
+.metric-badge { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.metric-badge.good { background: var(--green-tint); color: var(--green); }
+.metric-badge.warn { background: var(--amber-tint); color: var(--amber-ink); }
+.metric-badge.bad { background: #FBE9EA; color: var(--red); }
