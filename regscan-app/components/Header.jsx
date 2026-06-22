@@ -11,8 +11,8 @@ export function Header({ active }) {
       <div className="container">
         <div className="row">
           <Link href="/" className="brand" aria-label="RegScan home">
-            <span className="brand-mark">R</span>
-            <span>RegScan</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brand-logo" src="/images/Reg-Scan-Logo-400.png" alt="RegScan" width="120" height="30" />
           </Link>
           <nav className="nav" aria-label="Primary">
             <Link href="/#how" className={"nav-link" + (active === "how" ? " active" : "")}>How it works</Link>
@@ -39,9 +39,9 @@ export function GarageHeader() {
     <header className="site-header">
       <div className="container">
         <div className="row">
-          <Link href="/" className="brand">
-            <span className="brand-mark">R</span>
-            <span>RegScan</span>
+          <Link href="/" className="brand" aria-label="RegScan home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brand-logo" src="/images/Reg-Scan-Logo-400.png" alt="RegScan" width="120" height="30" />
           </Link>
           <nav className="nav">
             <Link href="/" className="nav-link">Home</Link>

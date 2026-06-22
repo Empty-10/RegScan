@@ -7,9 +7,9 @@ export function Footer() {
       <div className="container">
         <div className="grid">
           <div>
-            <Link href="/" className="brand" style={{ marginBottom: 14 }}>
-              <span className="brand-mark">R</span>
-              <span>RegScan</span>
+            <Link href="/" className="brand" aria-label="RegScan home" style={{ marginBottom: 14 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="brand-logo" src="/images/Reg-Scan-Logo-400.png" alt="RegScan" width="120" height="30" />
             </Link>
             <p style={{ marginTop: 14, maxWidth: 320, color: "var(--ink-3)", fontSize: 14, lineHeight: 1.55 }}>
               Free, instant MOT and tax checks using official UK government data. Independent service — not affiliated with the DVSA or DVLA.

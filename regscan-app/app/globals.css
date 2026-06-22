@@ -1890,3 +1890,6 @@ p { margin: 0; line-height: 1.55; }
 /* /check entry landing — a left-aligned column mirroring the home hero column. */
 .check-hero { max-width: 640px; margin: 0 auto; padding: 48px 0 72px; }
 .check-hero .post-title { margin-top: 14px; }
+
+/* Brand logo image (replaces the R mark + wordmark lockup) */
+.brand-logo { height: 30px; width: auto; display: block; }

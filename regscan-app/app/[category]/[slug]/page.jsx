@@ -94,7 +94,7 @@ export default function Page({ params }) {
       "@type": "Organization",
       name: "RegScan",
       url: `${SITE_URL}/`,
-      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.svg` },
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/images/Reg-Scan-Logo-400.png`, width: 400, height: 100 },
     },
   };
 
