@@ -43,12 +43,12 @@ function buildModel(v) {
   if (hasHistory) {
     verdicts.push(
       openAdvisories.length
-        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT`, title: "Advisories recorded at the most recent MOT — monitor and fix before they fail." }
+        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT`, title: "Advisories recorded at the most recent MOT — monitor and fix before they fail.", scrollId: "advisories" }
         : { kind: "good", icon: "check", label: "No advisories on last MOT" }
     );
     verdicts.push(
       recurring
-        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}`, title: recurringTip }
+        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}`, title: recurringTip, scrollId: "recurring-issues" }
         : { kind: "good", icon: "check", label: "No recurring advisories", title: "No fault has been flagged at more than one MOT." }
     );
   }
@@ -201,6 +201,11 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
   const [charges, setCharges] = useState(null);
   useEffect(() => setCharges(chargeStatusNow()), []);
 
+  const scrollToId = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   if (!m) {
     return (
       <>
@@ -260,7 +265,18 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                 </div>
                 <div className="vp-verdicts">
                   {m.verdicts.map((vd, i) => (
-                    <span key={i} className={"vp-verdict " + vd.kind}>
+                    <span
+                      key={i}
+                      className={"vp-verdict " + vd.kind + (vd.scrollId ? " is-link" : "")}
+                      role={vd.scrollId ? "button" : undefined}
+                      tabIndex={vd.scrollId ? 0 : undefined}
+                      onClick={vd.scrollId ? () => scrollToId(vd.scrollId) : undefined}
+                      onKeyDown={
+                        vd.scrollId
+                          ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); scrollToId(vd.scrollId); } }
+                          : undefined
+                      }
+                    >
                       <Icon name={vd.icon} size={14} stroke={2.25} />
                       {vd.label}
                       {vd.title && <InfoTip text={vd.title} />}
@@ -357,7 +373,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* ADVISORIES */}
           {m.advisories.length > 0 && (
-            <section className="results-section">
+            <section className="results-section" id="advisories">
               <h2>Advisories from last MOT</h2>
               <div className="advisory-list">
                 {m.advisories.map((a, i) => (
@@ -378,7 +394,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
 
           {/* RECURRING ISSUES */}
           {m.recurring.length > 0 && (
-            <section className="results-section">
+            <section className="results-section" id="recurring-issues">
               <h2>Recurring issues</h2>
               <p style={{ fontSize: 14, color: "var(--ink-3)", margin: "-4px 0 16px", maxWidth: 640 }}>
                 The same fault flagged at more than one MOT. A repeat advisory can mean a problem

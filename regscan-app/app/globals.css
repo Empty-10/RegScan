@@ -1922,3 +1922,8 @@ p { margin: 0; line-height: 1.55; }
   border: 6px solid transparent; border-top-color: var(--slate);
 }
 .infotip:hover .infotip-pop, .infotip-pop.open { display: block; }
+
+/* Clickable verdict chip that jumps to its detail section */
+.vp-verdict.is-link { cursor: pointer; }
+.vp-verdict.is-link:hover { filter: brightness(0.97); text-decoration: underline; text-underline-offset: 2px; }
+.results-section { scroll-margin-top: 24px; }
