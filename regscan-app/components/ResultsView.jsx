@@ -42,29 +42,6 @@ function buildModel(v) {
     years: [...new Set(g.dates.map((d) => (d || "").slice(0, 4)).filter(Boolean))].sort(),
   }));
   const recurring = recurringList.length;
-  const recurringTip = "The same fault flagged at more than one MOT — it can mean an issue that hasn’t been fully fixed.";
-  const verdicts = [
-    roadLegal
-      ? { kind: "good", icon: "shield-check", label: "Road legal" }
-      : { kind: "bad", icon: "alert-triangle", label: "Not road legal" },
-  ];
-  if (hasHistory) {
-    verdicts.push(
-      openAdvisories.length
-        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT`, title: "Advisories recorded at the most recent MOT — monitor and fix before they fail.", scrollId: "advisories" }
-        : { kind: "good", icon: "check", label: "No advisories on last MOT" }
-    );
-    verdicts.push(
-      recurring
-        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}`, title: recurringTip, scrollId: "recurring-issues" }
-        : { kind: "good", icon: "check", label: "No recurring advisories", title: "No fault has been flagged at more than one MOT." }
-    );
-  }
-  verdicts.push(
-    v.hasOutstandingRecall
-      ? { kind: "warn", icon: "alert-triangle", label: "Safety recall outstanding" }
-      : { kind: "good", icon: "check", label: "No active recalls" }
-  );
 
   // --- Positives / Negatives summary (good vs needs-attention) ---
   const positives = [];
@@ -223,7 +200,6 @@ function buildModel(v) {
     vrm: v.vrm,
     monogram: v.monogram,
     logoSrc: makeLogoSrc(v.make),
-    verdicts,
     positives,
     negatives,
     metrics,
@@ -629,36 +605,6 @@ function ResultsNav() {
         ))}
       </nav>
     </aside>
-  );
-}
-
-// Small info indicator: shows a popover on hover (desktop) and on tap (mobile).
-function InfoTip({ text }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("click", close);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("click", close);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-  return (
-    <span className="infotip">
-      <button
-        type="button"
-        className="infotip-btn"
-        aria-label={text}
-        aria-expanded={open}
-        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-      >
-        <Icon name="info" size={13} />
-      </button>
-      <span className={"infotip-pop" + (open ? " open" : "")} role="tooltip">{text}</span>
-    </span>
   );
 }
 
