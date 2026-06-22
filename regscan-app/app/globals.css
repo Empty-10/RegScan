@@ -1886,3 +1886,7 @@ p { margin: 0; line-height: 1.55; }
    via the existing .search-card .row media query. */
 .check-form { text-align: left; }
 .check-form .label { text-align: left; }
+
+/* /check entry landing — a left-aligned column mirroring the home hero column. */
+.check-hero { max-width: 640px; margin: 0 auto; padding: 48px 0 72px; }
+.check-hero .post-title { margin-top: 14px; }

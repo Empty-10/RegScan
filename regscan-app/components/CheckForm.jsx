@@ -45,6 +45,11 @@ export function CheckForm() {
           <Icon name="shield" size={14} /> Official DVSA &amp; DVLA data · Free to use
         </span>
       </div>
+      <div className="trust-row" style={{ marginTop: 18 }}>
+        <span className="pill"><Icon name="check" size={14} /> No account needed</span>
+        <span className="pill"><Icon name="check" size={14} /> Free &amp; instant</span>
+        <span className="pill"><Icon name="check" size={14} /> Official government data</span>
+      </div>
     </form>
   );
 }

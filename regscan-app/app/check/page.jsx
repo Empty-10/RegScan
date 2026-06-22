@@ -22,14 +22,14 @@ export default async function Page({ searchParams }) {
       <>
         <Header active="check" />
         <main className="post-page">
-          <div className="container container-narrow" style={{ textAlign: "center" }}>
-            <span className="eyebrow" style={{ justifyContent: "center" }}>Free vehicle check</span>
-            <h1 className="post-title">Check any vehicle’s MOT &amp; tax</h1>
-            <p className="lede" style={{ margin: "0 auto 8px", maxWidth: 560 }}>
-              Enter a UK registration to see live MOT status, full MOT history, advisories and
-              current tax status — straight from official DVSA &amp; DVLA data.
-            </p>
-            <div style={{ maxWidth: 620, margin: "0 auto" }}>
+          <div className="container">
+            <div className="check-hero">
+              <span className="eyebrow">Free vehicle check</span>
+              <h1 className="post-title">Check any vehicle’s MOT &amp; tax</h1>
+              <p className="lede" style={{ marginBottom: 4 }}>
+                Enter a UK registration to see live MOT status, full MOT history, advisories and
+                current tax status — straight from official DVSA &amp; DVLA data.
+              </p>
               <CheckForm />
             </div>
           </div>
