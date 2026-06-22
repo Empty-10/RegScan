@@ -231,19 +231,29 @@ function defectSignature(text) {
   return String(text).toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ").slice(0, 5).join(" ");
 }
 
-// Count of distinct defects that recur across 2+ MOT tests (same rule code / text).
-export function recurringAdvisoryCount(v) {
-  const sigCounts = {};
+// Distinct defects that recur across 2+ MOT tests (matched by rule code / text).
+// Returns the representative (most recent) text, how many tests it appeared at,
+// and the years — newest first. motTests are assumed newest-first.
+export function recurringAdvisories(v) {
+  const groups = {};
   (v.motTests || []).forEach((t) => {
     const seen = new Set();
     (t.defects || []).forEach((d) => {
       const sig = defectSignature(d.text);
       if (!sig || seen.has(sig)) return;
       seen.add(sig);
-      sigCounts[sig] = (sigCounts[sig] || 0) + 1;
+      if (!groups[sig]) groups[sig] = { text: d.text, type: d.type, dates: [] };
+      groups[sig].dates.push(t.date);
     });
   });
-  return Object.values(sigCounts).filter((c) => c >= 2).length;
+  return Object.values(groups)
+    .filter((g) => g.dates.length >= 2)
+    .map((g) => ({ ...g, count: g.dates.length }))
+    .sort((a, b) => b.count - a.count);
+}
+
+export function recurringAdvisoryCount(v) {
+  return recurringAdvisories(v).length;
 }
 
 // Transparent, defensible Vehicle Health score (replaces the prototype's hardcoded 82).

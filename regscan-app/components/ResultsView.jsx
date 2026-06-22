@@ -6,7 +6,7 @@ import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
-import { getVehicle, computeHealth, formatDate, makeLogoSrc, recurringAdvisoryCount } from "@/lib/mockData";
+import { getVehicle, computeHealth, formatDate, makeLogoSrc, recurringAdvisories } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED } from "@/lib/features";
 
@@ -26,7 +26,15 @@ function buildModel(v) {
 
   // At-a-glance verdict chips — positive (green) when good, amber when not.
   const hasHistory = (v.motTests || []).length > 0;
-  const recurring = recurringAdvisoryCount(v);
+  const totalTests = (v.motTests || []).length;
+  const recurringList = recurringAdvisories(v).map((g) => ({
+    text: g.text,
+    count: g.count,
+    total: totalTests,
+    years: [...new Set(g.dates.map((d) => (d || "").slice(0, 4)).filter(Boolean))],
+  }));
+  const recurring = recurringList.length;
+  const recurringTip = "The same fault flagged at more than one MOT — it can mean an issue that hasn’t been fully fixed.";
   const verdicts = [
     roadLegal
       ? { kind: "good", icon: "shield-check", label: "Road legal" }
@@ -35,13 +43,13 @@ function buildModel(v) {
   if (hasHistory) {
     verdicts.push(
       openAdvisories.length
-        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT` }
+        ? { kind: "warn", icon: "alert-triangle", label: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} on last MOT`, title: "Advisories recorded at the most recent MOT — monitor and fix before they fail." }
         : { kind: "good", icon: "check", label: "No advisories on last MOT" }
     );
     verdicts.push(
       recurring
-        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}` }
-        : { kind: "good", icon: "check", label: "No recurring advisories" }
+        ? { kind: "warn", icon: "alert-triangle", label: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}`, title: recurringTip }
+        : { kind: "good", icon: "check", label: "No recurring advisories", title: "No fault has been flagged at more than one MOT." }
     );
   }
   verdicts.push(
@@ -167,6 +175,7 @@ function buildModel(v) {
     monogram: v.monogram,
     logoSrc: makeLogoSrc(v.make),
     verdicts,
+    recurring: recurringList,
     name: `${titleCase(v.make)} ${v.model}`,
     meta,
     health,
@@ -251,7 +260,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                 </div>
                 <div className="vp-verdicts">
                   {m.verdicts.map((vd, i) => (
-                    <span key={i} className={"vp-verdict " + vd.kind}>
+                    <span key={i} className={"vp-verdict " + vd.kind} title={vd.title || undefined}>
                       <Icon name={vd.icon} size={14} stroke={2.25} />
                       {vd.label}
                     </span>
@@ -359,6 +368,32 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                     </div>
                     <span className={"badge badge-" + a.urgencyKind + " adv-urgency"}>
                       <span className="dot" />{a.urgency}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* RECURRING ISSUES */}
+          {m.recurring.length > 0 && (
+            <section className="results-section">
+              <h2>Recurring issues</h2>
+              <p style={{ fontSize: 14, color: "var(--ink-3)", margin: "-4px 0 16px", maxWidth: 640 }}>
+                The same fault flagged at more than one MOT. A repeat advisory can mean a problem
+                that hasn’t been fully resolved — worth getting checked.
+              </p>
+              <div className="advisory-list">
+                {m.recurring.map((r, i) => (
+                  <div className="advisory-row" key={i}>
+                    <div>
+                      <div className="adv-title">{r.text}</div>
+                      <div className="adv-meta">
+                        Flagged at {r.count} of {r.total} MOTs · {r.years.join(", ")}
+                      </div>
+                    </div>
+                    <span className="badge badge-amber adv-urgency">
+                      <span className="dot" />×{r.count}
                     </span>
                   </div>
                 ))}
