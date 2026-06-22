@@ -456,7 +456,7 @@ p { margin: 0; line-height: 1.55; }
   display: grid;
   grid-template-columns: 1.5fr auto;
   gap: 12px;
-  align-items: end;
+  align-items: flex-end;
 }
 .search-card .plate-input {
   position: relative;
@@ -1113,7 +1113,7 @@ p { margin: 0; line-height: 1.55; }
   padding: 48px 0 32px;
 }
 .garage-hero .row {
-  display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 16px;
+  display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;
 }
 .garage-hero h1 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 800; letter-spacing: -0.02em; }
 .garage-hero p { color: var(--ink-2); margin-top: 8px; font-size: 16px; }
