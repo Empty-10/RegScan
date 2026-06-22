@@ -101,6 +101,31 @@ export function extractFaq(html) {
   return faqs;
 }
 
+// Injects stable id anchors into h2/h3 headings (WordPress content has none) and
+// returns the rewritten HTML plus a table-of-contents list. IDs make sections
+// individually linkable (jump-links in search, cleaner chunks for AI engines).
+export function processArticle(html) {
+  if (!html) return { html: "", toc: [] };
+  const used = new Set();
+  const slugify = (t) => {
+    const base =
+      cleanText(t).toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 60) || "section";
+    let s = base, i = 2;
+    while (used.has(s)) s = `${base}-${i++}`;
+    used.add(s);
+    return s;
+  };
+  const toc = [];
+  const out = html.replace(/<(h2|h3)([^>]*)>([\s\S]*?)<\/\1>/gi, (m, tag, attrs, inner) => {
+    const text = cleanText(inner);
+    if (!text || /\bid=/.test(attrs)) return m;
+    const id = slugify(text);
+    toc.push({ id, text, level: tag.toLowerCase() === "h2" ? 2 : 3 });
+    return `<${tag}${attrs} id="${id}">${inner}</${tag}>`;
+  });
+  return { html: out, toc };
+}
+
 // Picks the "pillar" post for a category: prefers a slug matching the category
 // or one that reads like a comprehensive guide; falls back to the newest.
 export function getPillarPost(categorySlug) {

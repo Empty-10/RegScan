@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ArticleToc } from "@/components/ArticleToc";
 import {
   getAllPosts,
   getPost,
@@ -9,6 +10,7 @@ import {
   cleanText,
   excerptText,
   extractFaq,
+  processArticle,
   niceCategoryName,
   SITE_URL,
 } from "@/lib/posts";
@@ -61,6 +63,12 @@ export default function Page({ params }) {
   const related = getPostsByCategory(post.categorySlug).filter((p) => p.slug !== post.slug).slice(0, 4);
   const faqs = extractFaq(post.contentHtml);
 
+  // Anchor the headings + build the table of contents.
+  const { html: bodyHtml, toc } = processArticle(post.contentHtml);
+  const h2s = toc.filter((t) => t.level === 2);
+  const tocItems = h2s.length >= 2 ? h2s : toc; // top-level when possible, else all
+  const showToc = tocItems.length >= 3;
+
   const faqLd = faqs.length
     ? {
         "@context": "https://schema.org",
@@ -105,7 +113,8 @@ export default function Page({ params }) {
     <>
       <Header active="blog" />
       <main className="post-page">
-        <div className="container container-narrow">
+        <div className="container">
+         <div className="post-shell">
           <nav className="results-breadcrumb" aria-label="Breadcrumb">
             <Link href="/">Home</Link>
             <span>›</span>
@@ -113,7 +122,8 @@ export default function Page({ params }) {
             <span>›</span>
             <Link href={`/category/${post.categorySlug}/`}>{categoryName}</Link>
           </nav>
-          <article>
+          <div className={"post-layout" + (showToc ? "" : " no-toc")}>
+           <article className="post-main">
             <h1 className="post-title">{title}</h1>
             <div className="post-meta">
               <span className="post-byline">By the RegScan team</span>
@@ -133,7 +143,7 @@ export default function Page({ params }) {
               /* eslint-disable-next-line @next/next/no-img-element */
               <img className="post-hero" src={post.featuredImage} alt={post.featuredAlt || title} />
             )}
-            <div className="post-content" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+            <div className="post-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
             {/* CTA back to the core tool */}
             <aside className="post-cta">
@@ -144,20 +154,24 @@ export default function Page({ params }) {
               </div>
               <Link href="/check/" className="btn btn-primary btn-lg">Check a vehicle</Link>
             </aside>
-          </article>
 
-          {related.length > 0 && (
-            <section className="post-related" aria-label="Related guides">
-              <h2>More on {categoryName.toLowerCase()}</h2>
-              <ul className="post-list">
-                {related.map((p) => (
-                  <li key={p.slug}>
-                    <Link href={p.pathname}>{cleanText(p.title)}</Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            {related.length > 0 && (
+              <section className="post-related" aria-label="Related guides">
+                <h2>More on {categoryName.toLowerCase()}</h2>
+                <ul className="post-list">
+                  {related.map((p) => (
+                    <li key={p.slug}>
+                      <Link href={p.pathname}>{cleanText(p.title)}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+           </article>
+
+           {showToc && <ArticleToc items={tocItems} />}
+          </div>
+         </div>
         </div>
       </main>
       <Footer />
