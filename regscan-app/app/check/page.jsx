@@ -29,7 +29,7 @@ export default async function Page({ searchParams }) {
               Enter a UK registration to see live MOT status, full MOT history, advisories and
               current tax status — straight from official DVSA &amp; DVLA data.
             </p>
-            <div style={{ maxWidth: 560, margin: "0 auto" }}>
+            <div style={{ maxWidth: 620, margin: "0 auto" }}>
               <CheckForm />
             </div>
           </div>

@@ -1881,9 +1881,8 @@ p { margin: 0; line-height: 1.55; }
   .article-toc { position: static; order: -1; margin-bottom: 24px; }
 }
 
-/* Standalone /check entry form — always stacked so the button never overflows
-   its (narrower, centred) container regardless of viewport width. */
+/* Standalone /check entry form — same white search box as the home hero
+   (input + button side by side), just left-aligned content. Stacks on mobile
+   via the existing .search-card .row media query. */
 .check-form { text-align: left; }
-.check-form .row { grid-template-columns: 1fr; }
-.check-form .btn { width: 100%; }
 .check-form .label { text-align: left; }
