@@ -490,24 +490,25 @@ p { margin: 0; line-height: 1.55; }
 }
 
 /* ---------- Hero floating cards (right side) ---------- */
+/* Clean vertical stack of status cards (no overlap / rotation) */
 .hero-floats {
-  position: relative;
-  height: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: 100%;
 }
 .hf-card {
-  position: absolute;
+  position: relative;
+  width: 100%;
   background: #FFFFFF;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 20px 22px;
-  box-shadow: 0 1px 2px rgba(14,16,20,0.04), 0 16px 32px -18px rgba(14,16,20,0.18);
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(14,16,20,0.04), 0 12px 28px -22px rgba(14,16,20,0.18);
   display: grid;
   grid-template-columns: 14px 1fr;
   gap: 14px;
   align-items: center;
-  width: 400px;
-  transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
 }
 .hf-card__title {
   font-size: 14.5px;
@@ -522,25 +523,16 @@ p { margin: 0; line-height: 1.55; }
   margin-top: 3px;
   font-weight: 500;
 }
-/* Staggered, layered cluster — alternating left / right, varied widths, fills column edge-to-edge */
-.hf-card--mot      { top: 0;     left: 0;    width: 400px; transform: rotate(-2.5deg); z-index: 3; }
-.hf-card--tax      { top: 64px;   right: 0;   width: 400px; transform: rotate(2deg);    z-index: 2; }
-.hf-card--ulez     { top: 184px;  left: 0;    width: 412px; transform: rotate(-1.5deg); z-index: 2; }
-.hf-card--reminder { top: 278px;  right: 0;   width: 396px; transform: rotate(1.5deg);  z-index: 1; }
 
-/* Advisory card — amber-styled, the largest card, anchored at bottom */
+/* Advisory card — amber-styled, part of the stack */
 .hf-advisory {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: min(440px, 100%);
+  position: relative;
+  width: 100%;
   background: linear-gradient(180deg, #FFF7DF 0%, #FFEEC2 100%);
   border: 1px solid #F0DA92;
   border-radius: 16px;
   padding: 16px 18px;
-  box-shadow: 0 2px 4px rgba(122,80,0,0.08), 0 24px 48px -20px rgba(122,80,0,0.28);
-  transform: rotate(-2deg);
-  z-index: 3;
+  box-shadow: 0 2px 4px rgba(122,80,0,0.08), 0 18px 40px -24px rgba(122,80,0,0.28);
 }
 .hf-advisory__head {
   display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -569,9 +561,8 @@ p { margin: 0; line-height: 1.55; }
 
 /* Cycling notification pill */
 .hf-notif {
-  position: absolute;
-  right: 0;
-  bottom: -56px;
+  position: relative;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -610,25 +601,8 @@ p { margin: 0; line-height: 1.55; }
 .dotrow.red   { background: var(--red);    box-shadow: 0 0 0 4px rgba(192,22,42,0.14); }
 
 @media (max-width: 960px) {
-  .hero-floats {
-    height: auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 8px;
-  }
-  .hf-card, .hf-advisory {
-    position: relative;
-    inset: auto;
-    transform: none;
-    width: auto;
-    min-width: 0;
-  }
-  .hf-advisory { grid-column: 1 / -1; }
-  .hf-notif { position: relative; bottom: auto; right: auto; align-self: end; grid-column: 1 / -1; justify-self: end; }
-}
-@media (max-width: 480px) {
-  .hero-floats { grid-template-columns: 1fr; }
+  /* Hero stacks below the search; cap the card column width so it isn't full-bleed */
+  .hero-floats { max-width: 460px; margin-top: 8px; }
 }
 
 /* ---------- 3-col benefit / how / upsell ---------- */
