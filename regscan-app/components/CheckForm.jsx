@@ -23,7 +23,7 @@ export function CheckForm() {
   };
 
   return (
-    <form className="search-card" onSubmit={handleSubmit} style={{ marginTop: 8 }}>
+    <form className="search-card check-form" onSubmit={handleSubmit} style={{ marginTop: 8 }}>
       <div className="row">
         <div>
           <label className="label" htmlFor="vrm-input">Vehicle registration (VRM)</label>
