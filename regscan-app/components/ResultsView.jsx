@@ -31,7 +31,7 @@ function buildModel(v) {
     text: g.text,
     count: g.count,
     total: totalTests,
-    years: [...new Set(g.dates.map((d) => (d || "").slice(0, 4)).filter(Boolean))],
+    years: [...new Set(g.dates.map((d) => (d || "").slice(0, 4)).filter(Boolean))].sort(),
   }));
   const recurring = recurringList.length;
   const recurringTip = "The same fault flagged at more than one MOT — it can mean an issue that hasn’t been fully fixed.";
@@ -260,9 +260,10 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                 </div>
                 <div className="vp-verdicts">
                   {m.verdicts.map((vd, i) => (
-                    <span key={i} className={"vp-verdict " + vd.kind} title={vd.title || undefined}>
+                    <span key={i} className={"vp-verdict " + vd.kind}>
                       <Icon name={vd.icon} size={14} stroke={2.25} />
                       {vd.label}
+                      {vd.title && <InfoTip text={vd.title} />}
                     </span>
                   ))}
                 </div>
@@ -485,6 +486,36 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
       <Footer />
       {toast && <Toast onDone={() => setToast(null)}>{toast}</Toast>}
     </>
+  );
+}
+
+// Small info indicator: shows a popover on hover (desktop) and on tap (mobile).
+function InfoTip({ text }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("click", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return (
+    <span className="infotip">
+      <button
+        type="button"
+        className="infotip-btn"
+        aria-label={text}
+        aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+      >
+        <Icon name="info" size={13} />
+      </button>
+      <span className={"infotip-pop" + (open ? " open" : "")} role="tooltip">{text}</span>
+    </span>
   );
 }
 
