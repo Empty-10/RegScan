@@ -15,6 +15,7 @@ import {
   problemAreas,
   mileageCheck,
   environmentRating,
+  co2Band,
 } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
@@ -141,6 +142,7 @@ function buildModel(v) {
     euro: v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : "—",
     rde: v.realDrivingEmissions || null,
     env: environmentRating(v),
+    band: co2Band(v),
   };
 
   const meta = [
@@ -474,6 +476,12 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   )}
                 </span>
               </div>
+              {m.emissions.band && (
+                <div className="spec-row">
+                  <span className="k">CO₂ tax band</span>
+                  <span className="v">Band {m.emissions.band}</span>
+                </div>
+              )}
               <div className="spec-row">
                 <span className="k">Euro emissions standard</span>
                 <span className="v">{m.emissions.euro}</span>

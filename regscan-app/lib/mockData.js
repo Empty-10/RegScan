@@ -285,6 +285,18 @@ export function mileageCheck(v) {
   return { ok: issues.length === 0, issues, unreadable };
 }
 
+// Official DVLA CO2 tax band (A–M). Only applies to cars registered
+// 1 Mar 2001 – 31 Mar 2017; returns null otherwise (or if CO2 unknown).
+export function co2Band(v) {
+  if (v.co2 == null) return null;
+  const reg = v.firstRegistered ? new Date(v.firstRegistered) : v.year ? new Date(v.year, 0, 1) : null;
+  if (!reg || isNaN(reg)) return null;
+  if (reg < new Date("2001-03-01") || reg >= new Date("2017-04-01")) return null;
+  const bands = [[100, "A"], [110, "B"], [120, "C"], [130, "D"], [140, "E"], [150, "F"], [165, "G"], [175, "H"], [185, "I"], [200, "J"], [225, "K"], [255, "L"]];
+  for (const [ceil, letter] of bands) if (v.co2 <= ceil) return letter;
+  return "M";
+}
+
 // Environmental impact rating from fuel + CO2.
 export function environmentRating(v) {
   const f = String(v.fuel || "").toLowerCase();
