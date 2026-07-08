@@ -285,25 +285,6 @@ export function mileageCheck(v) {
   return { ok: issues.length === 0, issues, unreadable };
 }
 
-// Rough annual road-tax (VED) estimate — clearly an estimate, 2024/25 rates.
-export function estimateVED(v) {
-  const { year, co2 } = v;
-  if (!year) return null;
-  const f = String(v.fuel || "").toLowerCase();
-  const electric = f.includes("electric");
-  const alt = f.includes("hybrid") || f.includes("lpg") || f.includes("gas") || f.includes("bi-fuel");
-  if (year >= 2017) {
-    return { amount: electric ? 0 : alt ? 180 : 190, basis: "standard rate", supplement: !!v.taxArtEnd };
-  }
-  if (year >= 2001 && co2 != null) {
-    const table = [[100, 20], [110, 20], [120, 35], [130, 165], [140, 195], [150, 215], [165, 265], [175, 315], [185, 345], [200, 395], [225, 430], [255, 735], [Infinity, 760]];
-    let amount = 760;
-    for (const [ceil, val] of table) { if (co2 <= ceil) { amount = val; break; } }
-    return { amount, basis: "CO₂ band", supplement: false };
-  }
-  return null; // pre-2001 (engine-size based) — skip
-}
-
 // Environmental impact rating from fuel + CO2.
 export function environmentRating(v) {
   const f = String(v.fuel || "").toLowerCase();

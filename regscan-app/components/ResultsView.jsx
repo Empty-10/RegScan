@@ -14,7 +14,6 @@ import {
   recurringAdvisories,
   problemAreas,
   mileageCheck,
-  estimateVED,
   environmentRating,
 } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
@@ -135,7 +134,6 @@ function buildModel(v) {
     metrics.push({ icon: "check-circle", label: "MOT pass rate", value: `${pct}%`, rating: pct >= 80 ? { label: "Good", kind: "good" } : pct >= 60 ? { label: "Mixed", kind: "warn" } : { label: "Poor", kind: "bad" } });
   }
 
-  const ved = estimateVED(v);
   const emissions = {
     fuel: v.fuel && v.fuel !== "—" ? titleCase(v.fuel) : "—",
     co2: v.co2 != null ? `${v.co2} g/km` : "—",
@@ -143,9 +141,6 @@ function buildModel(v) {
     euro: v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : "—",
     rde: v.realDrivingEmissions || null,
     env: environmentRating(v),
-    ved: ved
-      ? `~£${ved.amount}/yr (${ved.basis})${ved.supplement ? " + £410 supplement" : ""}`
-      : null,
   };
 
   const meta = [
@@ -497,18 +492,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   </span>
                 </div>
               )}
-              {m.emissions.ved && (
-                <div className="spec-row">
-                  <span className="k">Estimated road tax (VED)</span>
-                  <span className="v">{m.emissions.ved}</span>
-                </div>
-              )}
             </div>
-            {m.emissions.ved && (
-              <p style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: 10 }}>
-                Road-tax estimate based on year, fuel and CO₂ at current rates — for guidance only.
-              </p>
-            )}
           </section>
 
           {/* LONDON CHARGE ZONES & AIR QUALITY */}
