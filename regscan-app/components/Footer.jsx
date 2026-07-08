@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { REMINDERS_ENABLED } from "@/lib/features";
+import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
 
 export function Footer() {
   return (
@@ -20,7 +20,7 @@ export function Footer() {
             <ul>
               <li><Link href="/#how">How it works</Link></li>
               {REMINDERS_ENABLED && <li><Link href="/#reminders">Reminders</Link></li>}
-              <li><Link href="/garage/">My Garage</Link></li>
+              {GARAGE_ENABLED && <li><Link href="/garage/">My Garage</Link></li>}
               <li><Link href="/#upsell">Partner offers</Link></li>
             </ul>
           </div>

@@ -7,7 +7,7 @@ import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { PlateInput, StatusBadge, FaqItem } from "./ui";
-import { REMINDERS_ENABLED } from "@/lib/features";
+import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
 
 export default function HomeView({ guides = [] }) {
   const router = useRouter();
@@ -145,15 +145,27 @@ export default function HomeView({ guides = [] }) {
                 <StatusBadge kind="green">Tax valid</StatusBadge>
               </div>
             </div>
-            <div className="step">
-              <span className="num">STEP 03</span>
-              <h3>Add it to your garage</h3>
-              <p>Create a free account to save multiple vehicles{REMINDERS_ENABLED ? ", manage reminders," : ""} and track everyone’s MOTs from one place.</p>
-              <div className="illust">
-                <Icon name="garage" size={18} />
-                <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>Free account · Multiple vehicles</span>
+            {GARAGE_ENABLED ? (
+              <div className="step">
+                <span className="num">STEP 03</span>
+                <h3>Add it to your garage</h3>
+                <p>Create a free account to save multiple vehicles{REMINDERS_ENABLED ? ", manage reminders," : ""} and track everyone’s MOTs from one place.</p>
+                <div className="illust">
+                  <Icon name="garage" size={18} />
+                  <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>Free account · Multiple vehicles</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="step">
+                <span className="num">STEP 03</span>
+                <h3>Check as often as you like</h3>
+                <p>It’s completely free with no account or card needed — check any UK vehicle, any time.</p>
+                <div className="illust">
+                  <Icon name="shield-check" size={18} />
+                  <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>Free · No sign‑up</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -338,9 +350,11 @@ export default function HomeView({ guides = [] }) {
                 You can ask for reminders for a single vehicle with just your email — no account needed. Create a free account to track multiple vehicles, edit reminder timings, and switch between email and (soon) SMS.
               </FaqItem>
             )}
-            <FaqItem q="Can I add more than one vehicle?">
-              Yes. Your garage supports an unlimited number of vehicles. Useful for families, fleet drivers, classic car owners, and anyone who has more than one set of plates to keep track of.
-            </FaqItem>
+            {GARAGE_ENABLED && (
+              <FaqItem q="Can I add more than one vehicle?">
+                Yes. Your garage supports an unlimited number of vehicles. Useful for families, fleet drivers, classic car owners, and anyone who has more than one set of plates to keep track of.
+              </FaqItem>
+            )}
             {REMINDERS_ENABLED && (
               <FaqItem q="How do I stop reminders?">
                 Every reminder email contains a one‑click unsubscribe link for that vehicle, plus a “stop all reminders” link. Logged‑in users can also toggle reminders per vehicle from the garage at any time.

@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import GarageView from "@/components/GarageView";
+import { GARAGE_ENABLED } from "@/lib/features";
 
 export const metadata = {
   title: "My Garage",
@@ -7,5 +9,7 @@ export const metadata = {
 };
 
 export default function Page() {
+  // Garage is a later feature — send direct visitors home until it's enabled.
+  if (!GARAGE_ENABLED) redirect("/");
   return <GarageView />;
 }

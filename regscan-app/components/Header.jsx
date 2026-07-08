@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
-import { REMINDERS_ENABLED } from "@/lib/features";
+import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
 
 export function Header({ active }) {
   return (
@@ -20,12 +20,20 @@ export function Header({ active }) {
             {REMINDERS_ENABLED && (
               <Link href="/#reminders" className={"nav-link" + (active === "reminders" ? " active" : "")}>Reminders</Link>
             )}
-            <Link href="/garage/" className={"nav-link" + (active === "garage" ? " active" : "")}>My Garage</Link>
+            {GARAGE_ENABLED && (
+              <Link href="/garage/" className={"nav-link" + (active === "garage" ? " active" : "")}>My Garage</Link>
+            )}
             <Link href="/#faq" className={"nav-link" + (active === "faq" ? " active" : "")}>FAQs</Link>
           </nav>
           <div className="header-cta">
-            <Link href="/garage/" className="btn btn-ghost btn-sm">Log in</Link>
-            <Link href="/garage/" className="btn btn-primary btn-sm">Sign up free</Link>
+            {GARAGE_ENABLED ? (
+              <>
+                <Link href="/garage/" className="btn btn-ghost btn-sm">Log in</Link>
+                <Link href="/garage/" className="btn btn-primary btn-sm">Sign up free</Link>
+              </>
+            ) : (
+              <Link href="/check/" className="btn btn-primary btn-sm">Check a vehicle</Link>
+            )}
           </div>
         </div>
       </div>

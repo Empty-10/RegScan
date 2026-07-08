@@ -8,7 +8,7 @@ import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
 import { getVehicle, computeHealth, formatDate, makeLogoSrc, recurringAdvisories } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
-import { REMINDERS_ENABLED } from "@/lib/features";
+import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
 
 const titleCase = (s) =>
   String(s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -383,9 +383,11 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
               <span className="vp-footer-meta">
                 <Icon name="shield" size={15} /> Checked today · Official DVSA &amp; DVLA data
               </span>
-              <button className="btn btn-primary" onClick={() => setToast("Saved to your garage")}>
-                <Icon name="garage" size={16} /> Save to garage
-              </button>
+              {GARAGE_ENABLED && (
+                <button className="btn btn-primary" onClick={() => setToast("Saved to your garage")}>
+                  <Icon name="garage" size={16} /> Save to garage
+                </button>
+              )}
             </div>
           </div>
 
