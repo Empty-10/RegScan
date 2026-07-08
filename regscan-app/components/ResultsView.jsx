@@ -6,7 +6,17 @@ import { Icon } from "./Icon";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast, StatusBadge } from "./ui";
-import { getVehicle, computeHealth, formatDate, makeLogoSrc, recurringAdvisories } from "@/lib/mockData";
+import {
+  getVehicle,
+  computeHealth,
+  formatDate,
+  makeLogoSrc,
+  recurringAdvisories,
+  problemAreas,
+  mileageCheck,
+  estimateVED,
+  environmentRating,
+} from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
 
@@ -55,8 +65,9 @@ function buildModel(v) {
   if (v.taxStatus === "valid") positives.push({ text: "Tax active" });
   else if (v.taxStatus === "expired") negatives.push({ text: "Untaxed" });
   else if (v.taxStatus === "sorn") negatives.push({ text: "Declared SORN" });
-  if (v.hasOutstandingRecall) negatives.push({ text: "Outstanding safety recall" });
-  else positives.push({ text: "No outstanding recalls" });
+  // Recall: only speak when DVSA actually knows (stay silent on "unknown").
+  if (v.recallStatus === "yes") negatives.push({ text: "Outstanding safety recall" });
+  else if (v.recallStatus === "no") positives.push({ text: "No outstanding recalls" });
   if (hasHistory) {
     if (openAdvisories.length) negatives.push({ text: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} at last MOT`, scrollId: "advisories" });
     else positives.push({ text: "No advisories at last MOT" });
@@ -68,6 +79,18 @@ function buildModel(v) {
   if (v.ulez && v.ulez.chargeable) negatives.push({ text: "ULEZ charges apply" });
   else positives.push({ text: "ULEZ compliant" });
   if (v.markedForExport) negatives.push({ text: "Marked for export" });
+
+  // Mileage consistency (odometer rollback / unreadable) + import provenance.
+  const mileageAudit = mileageCheck(v);
+  if (hasHistory) {
+    if (!mileageAudit.ok) negatives.push({ text: "Possible mileage discrepancy", scrollId: "mileage" });
+    else positives.push({ text: "No mileage anomalies" });
+  }
+  const importGap =
+    v.manufactureDate && v.firstRegistered
+      ? new Date(v.firstRegistered).getFullYear() - new Date(v.manufactureDate).getFullYear()
+      : 0;
+  if (importGap >= 1) negatives.push({ text: "Registered later than built (possible import)" });
 
   // --- Metric cards with interpreted ratings ---
   const ageYears = v.year ? new Date().getFullYear() - v.year : null;
@@ -89,8 +112,20 @@ function buildModel(v) {
     taxCard = { icon: "pound", label: "Tax", value: "SORN", rating: { label: "Off-road", kind: "warn" } };
   }
 
+  // MOT card with a due-date countdown.
+  const motDays = daysBetween(v.motExpiry);
+  let motCard = null;
+  if (v.motStatus === "valid") {
+    motCard = { icon: "check-circle", label: "MOT", value: "Valid", rating: motDays != null ? { label: motDays >= 0 ? `${motDays}d left` : "Due", kind: motDays > 30 ? "good" : "warn" } : { label: "Valid", kind: "good" } };
+  } else if (v.motStatus === "due-soon") {
+    motCard = { icon: "alert-triangle", label: "MOT", value: "Due soon", rating: { label: motDays != null ? `${motDays}d left` : "Soon", kind: "warn" } };
+  } else if (v.motStatus === "expired") {
+    motCard = { icon: "alert-triangle", label: "MOT", value: "Expired", rating: { label: "Overdue", kind: "bad" } };
+  }
+
   const metrics = [];
   if (taxCard) metrics.push(taxCard);
+  if (motCard) metrics.push(motCard);
   if (ageYears != null) metrics.push({ icon: "calendar", label: "Age", value: `${ageYears} yr${ageYears === 1 ? "" : "s"}`, rating: ageRating(ageYears) });
   if (latestMileage != null) metrics.push({ icon: "trending", label: "Mileage", value: `${latestMileage.toLocaleString()} ${unit}`, rating: mRating });
   if (perYear != null) metrics.push({ icon: "trending", label: "Yearly mileage", value: `${perYear.toLocaleString()} ${unit}`, rating: yearlyRating(perYear) });
@@ -100,12 +135,17 @@ function buildModel(v) {
     metrics.push({ icon: "check-circle", label: "MOT pass rate", value: `${pct}%`, rating: pct >= 80 ? { label: "Good", kind: "good" } : pct >= 60 ? { label: "Mixed", kind: "warn" } : { label: "Poor", kind: "bad" } });
   }
 
+  const ved = estimateVED(v);
   const emissions = {
     fuel: v.fuel && v.fuel !== "—" ? titleCase(v.fuel) : "—",
     co2: v.co2 != null ? `${v.co2} g/km` : "—",
     co2Rating: co2Rating(v.co2),
     euro: v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : "—",
     rde: v.realDrivingEmissions || null,
+    env: environmentRating(v),
+    ved: ved
+      ? `~£${ved.amount}/yr (${ved.basis})${ved.supplement ? " + £410 supplement" : ""}`
+      : null,
   };
 
   const meta = [
@@ -185,7 +225,7 @@ function buildModel(v) {
     .filter((t) => t.mileage != null)
     .slice()
     .reverse()
-    .map((t) => ({ label: monthYear(t.date), value: t.mileage }));
+    .map((t) => ({ label: monthYear(t.date), value: t.mileage, result: t.result }));
 
   const advisories = openAdvisories.map((d) => {
     const safety = /brake|tyre|tire|steering|suspension/i.test(d.text);
@@ -236,6 +276,8 @@ function buildModel(v) {
     // Hide rows we have no data for (e.g. body type, doors, previous keepers —
     // not available from DVSA/DVLA) so the card only shows real values.
     specs: specs.filter((s) => s.v != null && s.v !== "—"),
+    problemAreas: problemAreas(v),
+    mileageAudit,
     mileage,
     mileageUnit: v.mileageUnit || "mi",
     recall: !!v.hasOutstandingRecall,
@@ -447,7 +489,26 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   <span className="v">{m.emissions.rde}</span>
                 </div>
               )}
+              {m.emissions.env && (
+                <div className="spec-row">
+                  <span className="k">Environmental impact</span>
+                  <span className="v">
+                    <span className={"metric-badge " + m.emissions.env.kind}>{m.emissions.env.label}</span>
+                  </span>
+                </div>
+              )}
+              {m.emissions.ved && (
+                <div className="spec-row">
+                  <span className="k">Estimated road tax (VED)</span>
+                  <span className="v">{m.emissions.ved}</span>
+                </div>
+              )}
             </div>
+            {m.emissions.ved && (
+              <p style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: 10 }}>
+                Road-tax estimate based on year, fuel and CO₂ at current rates — for guidance only.
+              </p>
+            )}
           </section>
 
           {/* LONDON CHARGE ZONES & AIR QUALITY */}
@@ -534,14 +595,50 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
             </section>
           )}
 
+          {/* PROBLEM AREAS */}
+          {m.problemAreas.length > 0 && (
+            <section className="results-section" id="problem-areas" data-nav="Problem areas">
+              <h2>Problem areas</h2>
+              <p style={{ fontSize: 14, color: "var(--ink-3)", margin: "-4px 0 16px", maxWidth: 640 }}>
+                Every advisory and failure across this vehicle’s MOT history, grouped by area.
+              </p>
+              <div className="area-chips">
+                {m.problemAreas.map((a) => (
+                  <span className="area-chip" key={a.category}>
+                    {a.category}<span className="area-count">{a.count}</span>
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* MILEAGE HISTORY */}
           {m.mileage.length > 1 && (
             <section className="results-section" id="mileage" data-nav="Mileage">
               <h2>Mileage history</h2>
+              <div className={"mileage-check " + (m.mileageAudit.ok ? "ok" : "warn")}>
+                <Icon name={m.mileageAudit.ok ? "check-circle" : "alert-triangle"} size={16} stroke={2.25} />
+                {m.mileageAudit.ok ? (
+                  <span>Odometer readings are consistent — no anomalies detected.</span>
+                ) : (
+                  <span>
+                    Possible mileage discrepancy —{" "}
+                    {m.mileageAudit.issues
+                      .map((i) => `reading fell from ${i.from.toLocaleString()} (${i.fromYear}) to ${i.to.toLocaleString()} (${i.toYear})`)
+                      .join("; ")}
+                    .
+                  </span>
+                )}
+              </div>
+              {m.mileageAudit.unreadable.length > 0 && (
+                <p className="chart-note" style={{ marginTop: 0, marginBottom: 12 }}>
+                  Odometer was unreadable at: {m.mileageAudit.unreadable.join(", ")}.
+                </p>
+              )}
               <div className="chart-card">
                 <MileageChart data={m.mileage} />
                 <p className="chart-note">
-                  Mileage recorded at each MOT test. Inconsistent readings may indicate odometer tampering.
+                  Mileage recorded at each MOT test — green = pass, red = fail. Inconsistent readings can indicate odometer tampering.
                 </p>
               </div>
             </section>
@@ -783,7 +880,13 @@ function MileageChart({ data }) {
         const x = xFor(i), y = yFor(d.value);
         return (
           <g key={i}>
-            <circle className="chart-dot" cx={x} cy={y} r={5} />
+            <circle
+              className="chart-dot"
+              cx={x}
+              cy={y}
+              r={5}
+              style={d.result === "fail" ? { stroke: "var(--red)" } : { stroke: "var(--green)" }}
+            />
             <text className="chart-pointlabel" x={x} y={y - 16} textAnchor="middle">{d.value.toLocaleString()}</text>
             <text className="chart-xlabel" x={x} y={H - 14} textAnchor="middle">{d.label}</text>
           </g>

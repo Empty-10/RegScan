@@ -105,6 +105,16 @@ export function normalizeVehicle({ vrm, ves, mot }) {
   const euroStatus = ves?.euroStatus || null;
   const latestRead = motTests.find((t) => t.mileage != null);
 
+  // DVSA returns "Yes" | "No" | "Unknown" (or a boolean). Keep the tri-state so
+  // the UI can stay silent when it's genuinely unknown.
+  const rawRecall = mot?.hasOutstandingRecall;
+  const recallStatus =
+    rawRecall === true || String(rawRecall || "").toLowerCase() === "yes"
+      ? "yes"
+      : String(rawRecall || "").toLowerCase() === "no"
+      ? "no"
+      : "unknown";
+
   return {
     vrm,
     make: titleCase(make),
@@ -130,10 +140,11 @@ export function normalizeVehicle({ vrm, ves, mot }) {
     realDrivingEmissions: ves?.realDrivingEmissions || null,
     markedForExport: ves?.markedForExport === true,
     v5cIssued: toIsoDate(ves?.dateOfLastV5CIssued) || null,
-    // DVSA returns "Yes" | "No" | "Unknown" (older payloads) or a boolean.
-    hasOutstandingRecall:
-      mot?.hasOutstandingRecall === true ||
-      String(mot?.hasOutstandingRecall || "").toLowerCase() === "yes",
+    hasOutstandingRecall: recallStatus === "yes",
+    recallStatus,
+    // Manufacture vs first-registration dates — a gap can indicate an import.
+    manufactureDate: toIsoDate(mot?.manufactureDate) || null,
+    registrationDate: toIsoDate(mot?.registrationDate) || null,
     motStatus: deriveMotStatus(motExpiry),
     motExpiry,
     taxStatus: deriveTaxStatus(ves?.taxStatus),

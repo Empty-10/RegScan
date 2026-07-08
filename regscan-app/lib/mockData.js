@@ -231,6 +231,92 @@ function defectSignature(text) {
   return String(text).toLowerCase().replace(/[^a-z]+/g, " ").trim().split(" ").slice(0, 5).join(" ");
 }
 
+// Map a defect to a human problem-area using its MOT manual rule code.
+export function defectCategory(text) {
+  const m = String(text || "").match(/\b(\d+)\.(\d+)/);
+  if (!m) return "Other";
+  const major = m[1];
+  const sub = `${m[1]}.${m[2]}`;
+  if (major === "5") {
+    if (sub === "5.2") return "Tyres & wheels";
+    if (sub === "5.3") return "Suspension";
+    return "Axles & suspension";
+  }
+  return (
+    {
+      "1": "Brakes",
+      "2": "Steering",
+      "3": "Visibility",
+      "4": "Lights & electrical",
+      "6": "Body & structure",
+      "7": "Seatbelts & equipment",
+      "8": "Emissions & exhaust",
+    }[major] || "Other"
+  );
+}
+
+// Count defect categories across all MOT tests, most common first.
+export function problemAreas(v) {
+  const counts = {};
+  (v.motTests || []).forEach((t) =>
+    (t.defects || []).forEach((d) => {
+      const c = defectCategory(d.text);
+      counts[c] = (counts[c] || 0) + 1;
+    })
+  );
+  return Object.entries(counts).map(([category, count]) => ({ category, count })).sort((a, b) => b.count - a.count);
+}
+
+// Odometer consistency: flags a reading that fell vs a previous test (rollback)
+// and any tests where the odometer was unreadable.
+export function mileageCheck(v) {
+  const tests = (v.motTests || []).filter((t) => t.date).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  const issues = [];
+  const unreadable = [];
+  let prev = null;
+  for (const t of tests) {
+    if (t.mileageReadable === false) { unreadable.push((t.date || "").slice(0, 4)); continue; }
+    if (t.mileage == null) continue;
+    if (prev && t.mileage < prev.mileage) {
+      issues.push({ fromYear: (prev.date || "").slice(0, 4), from: prev.mileage, toYear: (t.date || "").slice(0, 4), to: t.mileage });
+    }
+    prev = t;
+  }
+  return { ok: issues.length === 0, issues, unreadable };
+}
+
+// Rough annual road-tax (VED) estimate — clearly an estimate, 2024/25 rates.
+export function estimateVED(v) {
+  const { year, co2 } = v;
+  if (!year) return null;
+  const f = String(v.fuel || "").toLowerCase();
+  const electric = f.includes("electric");
+  const alt = f.includes("hybrid") || f.includes("lpg") || f.includes("gas") || f.includes("bi-fuel");
+  if (year >= 2017) {
+    return { amount: electric ? 0 : alt ? 180 : 190, basis: "standard rate", supplement: !!v.taxArtEnd };
+  }
+  if (year >= 2001 && co2 != null) {
+    const table = [[100, 20], [110, 20], [120, 35], [130, 165], [140, 195], [150, 215], [165, 265], [175, 315], [185, 345], [200, 395], [225, 430], [255, 735], [Infinity, 760]];
+    let amount = 760;
+    for (const [ceil, val] of table) { if (co2 <= ceil) { amount = val; break; } }
+    return { amount, basis: "CO₂ band", supplement: false };
+  }
+  return null; // pre-2001 (engine-size based) — skip
+}
+
+// Environmental impact rating from fuel + CO2.
+export function environmentRating(v) {
+  const f = String(v.fuel || "").toLowerCase();
+  if (f.includes("electric")) return { label: "Very low", kind: "good" };
+  const c = v.co2;
+  if (c == null) return null;
+  if (c === 0) return { label: "Very low", kind: "good" };
+  if (c < 110) return { label: "Low", kind: "good" };
+  if (c < 150) return { label: "Moderate", kind: "good" };
+  if (c < 190) return { label: "High", kind: "warn" };
+  return { label: "Very high", kind: "bad" };
+}
+
 // Distinct defects that recur across 2+ MOT tests (matched by rule code / text).
 // Returns the representative (most recent) text, how many tests it appeared at,
 // and the years — newest first. motTests are assumed newest-first.
