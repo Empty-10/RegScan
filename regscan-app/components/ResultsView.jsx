@@ -58,9 +58,9 @@ function buildModel(v) {
   if (v.hasOutstandingRecall) negatives.push({ text: "Outstanding safety recall" });
   else positives.push({ text: "No outstanding recalls" });
   if (hasHistory) {
-    if (openAdvisories.length) negatives.push({ text: `${openAdvisories.length} advisories at last MOT`, scrollId: "advisories" });
+    if (openAdvisories.length) negatives.push({ text: `${openAdvisories.length} advisor${openAdvisories.length === 1 ? "y" : "ies"} at last MOT`, scrollId: "advisories" });
     else positives.push({ text: "No advisories at last MOT" });
-    if (recurring) negatives.push({ text: `${recurring} recurring advisories`, scrollId: "recurring-issues" });
+    if (recurring) negatives.push({ text: `${recurring} recurring advisor${recurring === 1 ? "y" : "ies"}`, scrollId: "recurring-issues" });
     else positives.push({ text: "No recurring faults" });
     if ((v.motTests || []).some((t) => t.result === "fail")) negatives.push({ text: "Has failed an MOT before" });
     else positives.push({ text: "Never failed an MOT" });
@@ -95,7 +95,6 @@ function buildModel(v) {
   if (latestMileage != null) metrics.push({ icon: "trending", label: "Mileage", value: `${latestMileage.toLocaleString()} ${unit}`, rating: mRating });
   if (perYear != null) metrics.push({ icon: "trending", label: "Yearly mileage", value: `${perYear.toLocaleString()} ${unit}`, rating: yearlyRating(perYear) });
   if (v.co2 != null) metrics.push({ icon: "trending", label: "CO₂ emissions", value: `${v.co2} g/km`, rating: co2Rating(v.co2) });
-  if (totalTests) metrics.push({ icon: "list", label: "MOT tests", value: `${totalTests}`, rating: null });
   if (totalTests) {
     const pct = Math.round((passes / totalTests) * 100);
     metrics.push({ icon: "check-circle", label: "MOT pass rate", value: `${pct}%`, rating: pct >= 80 ? { label: "Good", kind: "good" } : pct >= 60 ? { label: "Mixed", kind: "warn" } : { label: "Poor", kind: "bad" } });
@@ -325,6 +324,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                       Positives <span className="vp-pn-count pos">{m.positives.length}</span>
                     </div>
                     <ul>
+                      {m.positives.length === 0 && <li className="vp-pn-none">Nothing notable</li>}
                       {m.positives.map((p, i) => (
                         <li key={i}><span className="vp-pn-arrow pos">↑</span>{p.text}</li>
                       ))}
@@ -335,6 +335,7 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                       Negatives <span className="vp-pn-count neg">{m.negatives.length}</span>
                     </div>
                     <ul>
+                      {m.negatives.length === 0 && <li className="vp-pn-none">Nothing flagged</li>}
                       {m.negatives.map((n, i) => (
                         <li key={i}>
                           <span className="vp-pn-arrow neg">↓</span>
@@ -421,10 +422,6 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
           <section className="results-section" id="emissions" data-nav="Emissions">
             <h2>Emissions &amp; environment</h2>
             <div className="spec-card">
-              <div className="spec-row">
-                <span className="k">Fuel type</span>
-                <span className="v">{m.emissions.fuel}</span>
-              </div>
               <div className="spec-row">
                 <span className="k">CO₂ emissions</span>
                 <span className="v">

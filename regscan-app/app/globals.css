@@ -1912,3 +1912,4 @@ p { margin: 0; line-height: 1.55; }
 .metric-badge.good { background: var(--green-tint); color: var(--green); }
 .metric-badge.warn { background: var(--amber-tint); color: var(--amber-ink); }
 .metric-badge.bad { background: #FBE9EA; color: var(--red); }
+.vp-pn-none { color: var(--ink-4); font-style: italic; font-size: 13.5px; }
