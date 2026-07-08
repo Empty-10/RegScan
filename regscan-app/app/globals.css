@@ -1913,3 +1913,21 @@ p { margin: 0; line-height: 1.55; }
 .metric-badge.warn { background: var(--amber-tint); color: var(--amber-ink); }
 .metric-badge.bad { background: #FBE9EA; color: var(--red); }
 .vp-pn-none { color: var(--ink-4); font-style: italic; font-size: 13.5px; }
+
+/* ---------- Cookie consent banner ---------- */
+.consent {
+  position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 200;
+  background: var(--slate); color: #fff;
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  max-width: 640px; margin: 0 auto;
+}
+.consent-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; padding: 16px 20px; flex-wrap: wrap;
+}
+.consent-text { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--slate-ink-2); flex: 1; min-width: 220px; }
+.consent-text a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+.consent-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.consent-actions .btn-secondary { background: transparent; color: #fff; border-color: rgba(255,255,255,0.3); }
+.consent-actions .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+@media (max-width: 480px) { .consent-actions { width: 100%; } .consent-actions .btn { flex: 1; } }

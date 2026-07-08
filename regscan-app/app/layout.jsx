@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { ConsentBanner } from "@/components/ConsentBanner";
 import "./globals.css";
 
 const SITE = "https://www.regscan.co.uk";
@@ -51,16 +52,29 @@ export default function RootLayout({ children }) {
         {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
 
-        {/* Google Analytics (GA4) */}
+        {/* Google Analytics (GA4) with Consent Mode v2 — analytics denied by
+            default (no cookies) until the user accepts via the banner. */}
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
         <Script id="ga4" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              analytics_storage: 'denied',
+            });
+            try {
+              if (localStorage.getItem('regscan-consent') === 'granted') {
+                gtag('consent', 'update', { analytics_storage: 'granted' });
+              }
+            } catch (e) {}
             gtag('js', new Date());
             gtag('config', '${GA_ID}');
           `}
         </Script>
+        <ConsentBanner />
       </body>
     </html>
   );
