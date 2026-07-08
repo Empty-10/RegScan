@@ -25,6 +25,9 @@ const yearlyRating = (m) =>
   m == null ? null : m < 6000 ? { label: "Low", kind: "good" } : m < 10000 ? { label: "Average", kind: "good" } : m < 15000 ? { label: "High", kind: "warn" } : { label: "Very high", kind: "bad" };
 const mileageRating = (actual, expected) =>
   actual == null || !expected ? null : actual < expected * 0.6 ? { label: "Low", kind: "good" } : actual < expected * 1.1 ? { label: "Average", kind: "good" } : actual < expected * 1.5 ? { label: "High", kind: "warn" } : { label: "Very high", kind: "bad" };
+const co2Rating = (g) =>
+  g == null ? null : g === 0 ? { label: "Zero", kind: "good" } : g < 100 ? { label: "Low", kind: "good" } : g < 150 ? { label: "Average", kind: "good" } : g < 190 ? { label: "High", kind: "warn" } : { label: "Very high", kind: "bad" };
+const daysBetween = (iso) => (iso ? Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000) : null);
 
 function buildModel(v) {
   const health = computeHealth(v);
@@ -64,6 +67,7 @@ function buildModel(v) {
   }
   if (v.ulez && v.ulez.chargeable) negatives.push({ text: "ULEZ charges apply" });
   else positives.push({ text: "ULEZ compliant" });
+  if (v.markedForExport) negatives.push({ text: "Marked for export" });
 
   // --- Metric cards with interpreted ratings ---
   const ageYears = v.year ? new Date().getFullYear() - v.year : null;
@@ -74,15 +78,36 @@ function buildModel(v) {
   const mRating = mileageRating(latestMileage, ageYears ? ageYears * 7500 : null);
   if (mRating && (mRating.kind === "warn" || mRating.kind === "bad")) negatives.push({ text: "High mileage for its age" });
 
+  // Tax card (now that DVLA is live) with a due-date countdown.
+  const taxDays = daysBetween(v.taxExpiry);
+  let taxCard = null;
+  if (v.taxStatus === "valid") {
+    taxCard = { icon: "pound", label: "Tax", value: "Taxed", rating: taxDays != null ? { label: taxDays >= 0 ? `${taxDays}d left` : "Due", kind: taxDays > 30 ? "good" : "warn" } : { label: "Valid", kind: "good" } };
+  } else if (v.taxStatus === "expired") {
+    taxCard = { icon: "pound", label: "Tax", value: "Untaxed", rating: { label: "Overdue", kind: "bad" } };
+  } else if (v.taxStatus === "sorn") {
+    taxCard = { icon: "pound", label: "Tax", value: "SORN", rating: { label: "Off-road", kind: "warn" } };
+  }
+
   const metrics = [];
+  if (taxCard) metrics.push(taxCard);
   if (ageYears != null) metrics.push({ icon: "calendar", label: "Age", value: `${ageYears} yr${ageYears === 1 ? "" : "s"}`, rating: ageRating(ageYears) });
   if (latestMileage != null) metrics.push({ icon: "trending", label: "Mileage", value: `${latestMileage.toLocaleString()} ${unit}`, rating: mRating });
   if (perYear != null) metrics.push({ icon: "trending", label: "Yearly mileage", value: `${perYear.toLocaleString()} ${unit}`, rating: yearlyRating(perYear) });
+  if (v.co2 != null) metrics.push({ icon: "trending", label: "CO₂ emissions", value: `${v.co2} g/km`, rating: co2Rating(v.co2) });
   if (totalTests) metrics.push({ icon: "list", label: "MOT tests", value: `${totalTests}`, rating: null });
   if (totalTests) {
     const pct = Math.round((passes / totalTests) * 100);
     metrics.push({ icon: "check-circle", label: "MOT pass rate", value: `${pct}%`, rating: pct >= 80 ? { label: "Good", kind: "good" } : pct >= 60 ? { label: "Mixed", kind: "warn" } : { label: "Poor", kind: "bad" } });
   }
+
+  const emissions = {
+    fuel: v.fuel && v.fuel !== "—" ? titleCase(v.fuel) : "—",
+    co2: v.co2 != null ? `${v.co2} g/km` : "—",
+    co2Rating: co2Rating(v.co2),
+    euro: v.euroStatus && v.euroStatus !== "—" ? v.euroStatus : "—",
+    rde: v.realDrivingEmissions || null,
+  };
 
   const meta = [
     v.colour,
@@ -128,8 +153,6 @@ function buildModel(v) {
   const specs = [
     { k: "Fuel type", v: titleCase(v.fuel) },
     { k: "Engine size", v: v.engineCc ? `${v.engineCc.toLocaleString()} cc` : "—" },
-    { k: "CO₂ emissions", v: v.co2 != null ? `${v.co2} g/km` : "—" },
-    { k: "Euro emissions standard", v: v.euroStatus || "—" },
     { k: "Type approval category", v: v.typeApproval || "—" },
     { k: "Body type", v: v.bodyType || "—" },
     { k: "Number of doors", v: v.doors != null ? String(v.doors) : "—" },
@@ -203,6 +226,7 @@ function buildModel(v) {
     positives,
     negatives,
     metrics,
+    emissions,
     recurring: recurringList,
     name: `${titleCase(v.make)} ${v.model}`,
     meta,
@@ -390,6 +414,38 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   <span className="v">{s.v}</span>
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* EMISSIONS & ENVIRONMENT */}
+          <section className="results-section" id="emissions" data-nav="Emissions">
+            <h2>Emissions &amp; environment</h2>
+            <div className="spec-card">
+              <div className="spec-row">
+                <span className="k">Fuel type</span>
+                <span className="v">{m.emissions.fuel}</span>
+              </div>
+              <div className="spec-row">
+                <span className="k">CO₂ emissions</span>
+                <span className="v">
+                  {m.emissions.co2}
+                  {m.emissions.co2Rating && (
+                    <span className={"metric-badge " + m.emissions.co2Rating.kind} style={{ marginLeft: 8 }}>
+                      {m.emissions.co2Rating.label}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="spec-row">
+                <span className="k">Euro emissions standard</span>
+                <span className="v">{m.emissions.euro}</span>
+              </div>
+              {m.emissions.rde && (
+                <div className="spec-row">
+                  <span className="k">Real Driving Emissions (RDE)</span>
+                  <span className="v">{m.emissions.rde}</span>
+                </div>
+              )}
             </div>
           </section>
 
