@@ -1,6 +1,8 @@
+import Script from "next/script";
 import "./globals.css";
 
 const SITE = "https://www.regscan.co.uk";
+const GA_ID = "G-QJ9F7VZWJL";
 
 export const metadata = {
   // Must match the canonical host (www) so OG/relative URLs resolve consistently.
@@ -48,6 +50,17 @@ export default function RootLayout({ children }) {
       <body>
         {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+
+        {/* Google Analytics (GA4) */}
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="ga4" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}');
+          `}
+        </Script>
       </body>
     </html>
   );
