@@ -233,7 +233,9 @@ function buildModel(v) {
     roadLegal,
     advisoryCount: openAdvisories.length,
     compliance,
-    specs,
+    // Hide rows we have no data for (e.g. body type, doors, previous keepers —
+    // not available from DVSA/DVLA) so the card only shows real values.
+    specs: specs.filter((s) => s.v != null && s.v !== "—"),
     mileage,
     mileageUnit: v.mileageUnit || "mi",
     recall: !!v.hasOutstandingRecall,
