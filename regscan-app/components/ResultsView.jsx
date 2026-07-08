@@ -16,6 +16,7 @@ import {
   mileageCheck,
   environmentRating,
   co2Band,
+  vehicleTax,
 } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
@@ -143,6 +144,7 @@ function buildModel(v) {
     rde: v.realDrivingEmissions || null,
     env: environmentRating(v),
     band: co2Band(v),
+    tax: vehicleTax(v),
   };
 
   const meta = [
@@ -500,7 +502,24 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
                   </span>
                 </div>
               )}
+              {m.emissions.tax && (
+                <div className="spec-row">
+                  <span className="k">Annual road tax ({m.emissions.tax.taxYear})</span>
+                  <span className="v">£{m.emissions.tax.amount.toLocaleString()}</span>
+                </div>
+              )}
             </div>
+            {m.emissions.tax && m.emissions.tax.supplement > 0 && (
+              <p style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: 10 }}>
+                Plus a £{m.emissions.tax.supplement} “expensive car” supplement
+                {m.emissions.tax.supplementUntil ? ` until ${formatDate(m.emissions.tax.supplementUntil)}` : ""} (list price was over £40,000).
+              </p>
+            )}
+            {m.emissions.tax && (
+              <p style={{ fontSize: 12.5, color: "var(--ink-4)", marginTop: m.emissions.tax.supplement > 0 ? 4 : 10 }}>
+                Road tax at {m.emissions.tax.taxYear} rates. Check gov.uk for the current amount.
+              </p>
+            )}
           </section>
 
           {/* LONDON CHARGE ZONES & AIR QUALITY */}

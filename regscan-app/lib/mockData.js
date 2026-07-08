@@ -297,6 +297,41 @@ export function co2Band(v) {
   return "M";
 }
 
+// ---------------------------------------------------------------------------
+// VED (road tax) rates — UPDATE THIS BLOCK EACH APRIL when the government sets
+// new rates. Figures are the official standard 12-month rates; verify at
+// https://www.gov.uk/vehicle-tax-rate-tables before relying on them.
+export const TAX_YEAR = "2025/26";
+const BAND_RATES = { A: 20, B: 20, C: 35, D: 165, E: 195, F: 215, G: 265, H: 315, I: 345, J: 395, K: 430, L: 735, M: 760 }; // registered 2001–2017
+const STANDARD_RATE = 195; // registered from Apr 2017 (petrol/diesel/electric)
+const ALT_FUEL_DISCOUNT = 10; // hybrids / LPG etc. pay £10 less
+const EXPENSIVE_SUPPLEMENT = 425; // list price > £40k, years 2–6
+const PRE2001_SMALL = 210; // engine <= 1549cc
+const PRE2001_LARGE = 360; // engine > 1549cc
+// ---------------------------------------------------------------------------
+
+// Actual annual road tax from the official rate tables (not an estimate).
+// Returns { taxYear, amount, band?, basis, supplement } or null if not determinable.
+export function vehicleTax(v) {
+  const reg = v.firstRegistered ? new Date(v.firstRegistered) : v.year ? new Date(v.year, 0, 1) : null;
+  if (!reg || isNaN(reg)) return null;
+  const f = String(v.fuel || "").toLowerCase();
+  const alt = f.includes("hybrid") || f.includes("lpg") || f.includes("gas") || f.includes("bi-fuel");
+  const discount = alt ? ALT_FUEL_DISCOUNT : 0;
+
+  if (reg >= new Date("2017-04-01")) {
+    return { taxYear: TAX_YEAR, amount: STANDARD_RATE - discount, basis: "standard rate", supplement: v.taxArtEnd ? EXPENSIVE_SUPPLEMENT : 0, supplementUntil: v.taxArtEnd || null };
+  }
+  const band = co2Band(v);
+  if (band && BAND_RATES[band] != null) {
+    return { taxYear: TAX_YEAR, amount: BAND_RATES[band] - discount, band, basis: `Band ${band}`, supplement: 0 };
+  }
+  if (reg < new Date("2001-03-01") && v.engineCc != null) {
+    return { taxYear: TAX_YEAR, amount: v.engineCc <= 1549 ? PRE2001_SMALL : PRE2001_LARGE, basis: "engine size", supplement: 0 };
+  }
+  return null;
+}
+
 // Environmental impact rating from fuel + CO2.
 export function environmentRating(v) {
   const f = String(v.fuel || "").toLowerCase();
