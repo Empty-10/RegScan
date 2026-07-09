@@ -143,6 +143,14 @@ export default function Page({ params }) {
               /* eslint-disable-next-line @next/next/no-img-element */
               <img className="post-hero" src={post.featuredImage} alt={post.featuredAlt || title} />
             )}
+
+            <Link href="/check/" className="post-cta-inline">
+              <span className="post-cta-inline-text">
+                <strong>Check any car’s MOT, tax &amp; history</strong> — free, instant, official DVSA &amp; DVLA data
+              </span>
+              <span className="post-cta-inline-btn">Check a vehicle →</span>
+            </Link>
+
             <div className="post-content" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
 
             {/* CTA back to the core tool */}
@@ -169,7 +177,16 @@ export default function Page({ params }) {
             )}
            </article>
 
-           {showToc && <ArticleToc items={tocItems} />}
+           {showToc && (
+             <div className="post-rail">
+               <ArticleToc items={tocItems} />
+               <Link href="/check/" className="rail-cta">
+                 <span className="rail-cta-title">Check a vehicle</span>
+                 <span className="rail-cta-sub">Live MOT, tax &amp; full history — free</span>
+                 <span className="rail-cta-btn">Search a reg →</span>
+               </Link>
+             </div>
+           )}
           </div>
          </div>
         </div>
