@@ -17,5 +17,10 @@
   "when-does-my-mot-run-out": "You can check when your MOT runs out free in seconds using your registration at gov.uk or RegScan. MOTs are valid for one year, and you can renew up to a month early without changing the due date.",
   "what-does-an-mot-advisory-mean": "An MOT advisory is a fault the tester noted that didn't fail your car but needs watching - like worn tyres or brakes. Your car still passes, but if the same advisory returns year after year it's usually getting worse, which RegScan flags automatically.",
   "is-my-car-taxed": "You can check if a car is taxed in seconds using its registration - RegScan shows Taxed, Untaxed or SORN plus the due date, free from official DVLA data with no sign-up.",
-  "mot-and-tax-check": "Check a car's MOT and tax together from one registration - live MOT status, full history with advisories, and tax status on one page, free, using official DVSA and DVLA data."
+  "mot-and-tax-check": "Check a car's MOT and tax together from one registration - live MOT status, full history with advisories, and tax status on one page, free, using official DVSA and DVLA data.",
+  "check-used-car-mot-history": "Before buying, check a used car's full MOT history free - look for consistent rising mileage, what past failures were for, and advisories that keep recurring (a sign of an unfixed, worsening fault).",
+  "sorn-explained": "A SORN declares a vehicle off the road so you don't pay tax or insurance, but it must be kept on private land and not driven, except to a booked MOT. It ends automatically when you tax the car again.",
+  "uk-vehicle-tax-bands": "UK road tax depends on when the car was registered: CO2 bands A-M for 2001-2017 cars, a flat standard rate for 2017-on cars (plus a supplement over £40k list price), and engine size before 2001.",
+  "mot-vs-service": "An MOT is a legally required annual safety and emissions inspection; a service is optional preventative maintenance (oil, filters, wear parts). Different things - most cars need both, and a service helps pass the MOT.",
+  "what-happens-at-an-mot-test": "An MOT is a 45-60 minute inspection of your car's safety and emissions against DVSA standards - lights, brakes, tyres, steering and more - ending in a pass or fail plus advisories. No parts are changed."
 }
