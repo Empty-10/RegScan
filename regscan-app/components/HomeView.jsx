@@ -76,9 +76,9 @@ export default function HomeView({ guides = [] }) {
               </form>
 
               <div className="trust-row">
-                <span className="pill"><Icon name="check" size={14} /> No card required</span>
-                <span className="pill"><Icon name="check" size={14} /> 4.7★ on Trustpilot</span>
-                <span className="pill"><Icon name="check" size={14} /> Used 1.2m+ times</span>
+                <span className="pill"><Icon name="check" size={14} /> Official DVSA &amp; DVLA data</span>
+                <span className="pill"><Icon name="check" size={14} /> Free · no sign-up, no card</span>
+                <span className="pill"><Icon name="check" size={14} /> Flags recurring MOT advisories</span>
               </div>
             </div>
 
@@ -360,12 +360,31 @@ export default function HomeView({ guides = [] }) {
                 Every reminder email contains a one‑click unsubscribe link for that vehicle, plus a “stop all reminders” link. Logged‑in users can also toggle reminders per vehicle from the garage at any time.
               </FaqItem>
             )}
+            <FaqItem q="What does an MOT advisory mean?">
+              An MOT advisory is a note from the tester about something that didn’t fail the test but may need attention soon, such as worn tyres or brake pads. RegScan automatically highlights advisories that repeat across multiple MOTs, which often signals a worsening issue.
+            </FaqItem>
             <FaqItem q="Is RegScan affiliated with the DVSA, DVLA or gov.uk?">
               No. RegScan is an independent service that consumes the official open APIs. We’re not part of any government body, and we don’t represent ourselves as such.
             </FaqItem>
           </div>
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              { "@type": "Question", name: "Is the data official?", acceptedAnswer: { "@type": "Answer", text: "Yes. We use the DVSA MOT History API and the DVLA Vehicle Enquiry Service — the same data sources the gov.uk pages use. We don’t edit or interpret it; you see exactly what the government records show." } },
+              { "@type": "Question", name: "Do I need to pay to check my MOT or tax?", acceptedAnswer: { "@type": "Answer", text: "No. Running an MOT and tax check is free and unlimited. Some optional partner services (deeper history reports, insurance quotes, valuations) may have their own pricing and are clearly labelled." } },
+              { "@type": "Question", name: "What does an MOT advisory mean?", acceptedAnswer: { "@type": "Answer", text: "An MOT advisory is a note from the tester about something that didn’t fail the test but may need attention soon, such as worn tyres or brake pads. RegScan automatically highlights advisories that repeat across multiple MOTs, which often signals a worsening issue." } },
+              { "@type": "Question", name: "Is RegScan affiliated with the DVSA, DVLA or gov.uk?", acceptedAnswer: { "@type": "Answer", text: "No. RegScan is an independent service that consumes the official open APIs. We’re not part of any government body, and we don’t represent ourselves as such." } },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </>

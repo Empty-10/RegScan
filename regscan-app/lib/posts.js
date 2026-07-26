@@ -15,6 +15,10 @@ const readJson = (p) => JSON.parse(fs.readFileSync(p, "utf8"));
 const summaries = fs.existsSync(SUMMARIES) ? readJson(SUMMARIES) : {};
 const withSummary = (post) => (post ? { ...post, summary: summaries[post.slug] || null } : post);
 
+// Posts consolidated elsewhere (kept out of listings/sitemap/routing). The URL
+// is 301-redirected in next.config.mjs. Survives WordPress re-imports.
+const REDIRECTED = new Set(["when-does-my-mot-run-out"]);
+
 export function getAllPosts() {
   if (!fs.existsSync(POSTS_DIR)) return [];
   const posts = [];
@@ -22,13 +26,16 @@ export function getAllPosts() {
     const dir = path.join(POSTS_DIR, cat);
     if (!fs.statSync(dir).isDirectory()) continue;
     for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-      posts.push(withSummary(readJson(path.join(dir, file))));
+      const post = readJson(path.join(dir, file));
+      if (REDIRECTED.has(post.slug)) continue;
+      posts.push(withSummary(post));
     }
   }
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
 }
 
 export function getPost(categorySlug, slug) {
+  if (REDIRECTED.has(slug)) return null;
   const p = path.join(POSTS_DIR, categorySlug, `${slug}.json`);
   return fs.existsSync(p) ? withSummary(readJson(p)) : null;
 }

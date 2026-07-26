@@ -1,0 +1,23 @@
+# RegScan
+
+> Free UK vehicle MOT and tax checker. Enter a registration to see live MOT
+> status, full MOT history, advisories, and current tax status — from the
+> official DVSA MOT History API and DVLA Vehicle Enquiry Service. Free, no
+> sign-up, no card. RegScan also flags advisories that recur across multiple
+> MOTs, which often signals a worsening fault.
+
+RegScan is independent and not affiliated with the DVSA, DVLA or GOV.UK.
+
+## Tool
+- Check a vehicle: https://www.regscan.co.uk/check/
+
+## Guides
+- Blog index: https://www.regscan.co.uk/blog/
+- How long is an MOT valid for: https://www.regscan.co.uk/how-long-is-an-mot-valid-for/how-long-is-an-mot-valid-for-a-complete-guide/
+- Can I drive to MOT without tax: https://www.regscan.co.uk/how-long-is-an-mot-valid-for/can-i-drive-to-mot-without-tax/
+- Penalty for no MOT: https://www.regscan.co.uk/how-long-is-an-mot-valid-for/penalty-for-no-mot-what-you-need-to-know/
+- Things to check before MOT: https://www.regscan.co.uk/things-to-check-before-mot/things-to-check-before-mot-the-ultimate-mot-checklist/
+
+## Notes
+- Data sources: DVSA MOT History API, DVLA Vehicle Enquiry Service.
+- Sitemap: https://www.regscan.co.uk/sitemap.xml
