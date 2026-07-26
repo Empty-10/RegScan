@@ -4,8 +4,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
+const CUSTOM_DIR = path.join(process.cwd(), "content", "custom"); // hand-authored, not touched by the WP importer
 const PAGES_DIR = path.join(process.cwd(), "content", "pages");
 const SUMMARIES = path.join(process.cwd(), "content", "summaries.json");
+
+function readPostsFrom(root, out) {
+  if (!fs.existsSync(root)) return;
+  for (const cat of fs.readdirSync(root)) {
+    const dir = path.join(root, cat);
+    if (!fs.statSync(dir).isDirectory()) continue;
+    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+      out.push(readJson(path.join(dir, file)));
+    }
+  }
+}
 
 export const SITE_URL = "https://www.regscan.co.uk";
 
@@ -20,24 +32,22 @@ const withSummary = (post) => (post ? { ...post, summary: summaries[post.slug] |
 const REDIRECTED = new Set(["when-does-my-mot-run-out"]);
 
 export function getAllPosts() {
-  if (!fs.existsSync(POSTS_DIR)) return [];
-  const posts = [];
-  for (const cat of fs.readdirSync(POSTS_DIR)) {
-    const dir = path.join(POSTS_DIR, cat);
-    if (!fs.statSync(dir).isDirectory()) continue;
-    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
-      const post = readJson(path.join(dir, file));
-      if (REDIRECTED.has(post.slug)) continue;
-      posts.push(withSummary(post));
-    }
-  }
-  return posts.sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
+  const raw = [];
+  readPostsFrom(POSTS_DIR, raw);
+  readPostsFrom(CUSTOM_DIR, raw);
+  return raw
+    .filter((p) => !REDIRECTED.has(p.slug))
+    .map(withSummary)
+    .sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
 }
 
 export function getPost(categorySlug, slug) {
   if (REDIRECTED.has(slug)) return null;
-  const p = path.join(POSTS_DIR, categorySlug, `${slug}.json`);
-  return fs.existsSync(p) ? withSummary(readJson(p)) : null;
+  for (const root of [POSTS_DIR, CUSTOM_DIR]) {
+    const p = path.join(root, categorySlug, `${slug}.json`);
+    if (fs.existsSync(p)) return withSummary(readJson(p));
+  }
+  return null;
 }
 
 export function getPostsByCategory(categorySlug) {

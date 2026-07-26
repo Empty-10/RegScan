@@ -14,5 +14,6 @@
   "what-if-your-car-fails-mot-before-expiry": "If your car fails its MOT while the current certificate is still valid, you may keep driving on the old certificate only if no 'dangerous' defect was recorded. A dangerous fault means you must not drive it until it's repaired and retested.",
   "how-long-does-a-motorcycle-mot-take": "A motorcycle MOT usually takes about 20–30 minutes — quicker than a car test as there's less to inspect. Allow extra time if the test centre is busy or any repairs are needed.",
   "how-long-is-mot-valid-for": "An MOT is valid for one year from the test date. You can renew up to a month early without losing your renewal date, and driving after it expires is illegal — there is no grace period.",
-  "when-does-my-mot-run-out": "You can check when your MOT runs out free in seconds using your registration at gov.uk or RegScan. MOTs are valid for one year, and you can renew up to a month early without changing the due date."
+  "when-does-my-mot-run-out": "You can check when your MOT runs out free in seconds using your registration at gov.uk or RegScan. MOTs are valid for one year, and you can renew up to a month early without changing the due date.",
+  "what-does-an-mot-advisory-mean": "An MOT advisory is a fault the tester noted that didn't fail your car but needs watching — like worn tyres or brakes. Your car still passes, but if the same advisory returns year after year it's usually getting worse, which RegScan flags automatically."
 }
