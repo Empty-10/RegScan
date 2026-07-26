@@ -11,6 +11,18 @@ export default function sitemap() {
     priority: p === "/" ? 1 : 0.7,
   }));
 
+  const infoUrls = [
+    "/about/",
+    "/contact/",
+    "/privacy-policy/",
+    "/cookie-policy/",
+    "/terms-of-use/",
+  ].map((p) => ({
+    url: `${SITE_URL}${p}`,
+    changeFrequency: "yearly",
+    priority: 0.3,
+  }));
+
   const categoryUrls = categories.map((c) => ({
     url: `${SITE_URL}/category/${c.slug}/`,
     changeFrequency: "weekly",
@@ -24,5 +36,5 @@ export default function sitemap() {
     priority: 0.8,
   }));
 
-  return [...staticUrls, ...categoryUrls, ...postUrls];
+  return [...staticUrls, ...infoUrls, ...categoryUrls, ...postUrls];
 }

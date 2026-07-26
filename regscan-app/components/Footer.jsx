@@ -39,7 +39,7 @@ export function Footer() {
             <ul>
               <li><Link href="/privacy-policy/">Privacy policy</Link></li>
               <li><Link href="/cookie-policy/">Cookie policy</Link></li>
-              <li><a href="#">Terms of use</a></li>
+              <li><Link href="/terms-of-use/">Terms of use</Link></li>
             </ul>
           </div>
         </div>
