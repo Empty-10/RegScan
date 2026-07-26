@@ -28,19 +28,18 @@ export function Footer() {
             <h5>Resources</h5>
             <ul>
               <li><Link href="/blog/">Blog</Link></li>
+              <li><Link href="/about/">About RegScan</Link></li>
               <li><Link href="/#content">About MOT &amp; tax</Link></li>
               <li><Link href="/#faq">FAQs</Link></li>
-              <li><a href="#">Data sources (DVSA/DVLA)</a></li>
-              <li><a href="#">Contact</a></li>
+              <li><Link href="/contact/">Contact</Link></li>
             </ul>
           </div>
           <div>
             <h5>Legal</h5>
             <ul>
-              <li><a href="#">Privacy policy</a></li>
+              <li><Link href="/privacy-policy/">Privacy policy</Link></li>
               <li><Link href="/cookie-policy/">Cookie policy</Link></li>
               <li><a href="#">Terms of use</a></li>
-              <li><a href="#">Advertising</a></li>
             </ul>
           </div>
         </div>

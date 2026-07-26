@@ -32,18 +32,21 @@ const withSummary = (post) => (post ? { ...post, summary: summaries[post.slug] |
 const REDIRECTED = new Set(["when-does-my-mot-run-out"]);
 
 export function getAllPosts() {
-  const raw = [];
-  readPostsFrom(POSTS_DIR, raw);
-  readPostsFrom(CUSTOM_DIR, raw);
-  return raw
-    .filter((p) => !REDIRECTED.has(p.slug))
-    .map(withSummary)
-    .sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
+  const imported = [];
+  readPostsFrom(POSTS_DIR, imported);
+  const custom = [];
+  readPostsFrom(CUSTOM_DIR, custom);
+  // custom overrides imported by slug (lets us refresh imported posts in-repo)
+  const byId = new Map();
+  for (const p of imported) if (!REDIRECTED.has(p.slug)) byId.set(p.slug, p);
+  for (const p of custom) if (!REDIRECTED.has(p.slug)) byId.set(p.slug, p);
+  return [...byId.values()].map(withSummary).sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 export function getPost(categorySlug, slug) {
   if (REDIRECTED.has(slug)) return null;
-  for (const root of [POSTS_DIR, CUSTOM_DIR]) {
+  for (const root of [CUSTOM_DIR, POSTS_DIR]) {
+    // custom first so a refreshed version wins over the imported one
     const p = path.join(root, categorySlug, `${slug}.json`);
     if (fs.existsSync(p)) return withSummary(readJson(p));
   }
