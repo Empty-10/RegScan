@@ -1,5 +1,14 @@
 import { getAllPosts, getCategories, SITE_URL } from "@/lib/posts";
 
+// Coerce any stored date (some WP-imported posts lack a timezone, e.g.
+// "2024-12-08T17:52:12") into a valid W3C datetime Google will accept.
+// Returns undefined for unparseable dates so <lastmod> is simply omitted.
+function toValidDate(value) {
+  if (!value) return undefined;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 // Generates /sitemap.xml from the migrated content + key static pages.
 export default function sitemap() {
   const posts = getAllPosts();
@@ -31,7 +40,7 @@ export default function sitemap() {
 
   const postUrls = posts.map((p) => ({
     url: `${SITE_URL}${p.pathname}`,
-    lastModified: p.modified || p.date,
+    lastModified: toValidDate(p.modified || p.date),
     changeFrequency: "monthly",
     priority: 0.8,
   }));
