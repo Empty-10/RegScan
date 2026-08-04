@@ -20,6 +20,7 @@ import {
 } from "@/lib/mockData";
 import { chargeStatusNow } from "@/lib/charges";
 import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
+import { trackEvent } from "@/lib/analytics";
 
 const titleCase = (s) =>
   String(s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -294,6 +295,17 @@ export default function ResultsView({ vehicle, vrm, notFound, airQuality }) {
   // to keep it accurate and avoid a server/client hydration mismatch.
   const [charges, setCharges] = useState(null);
   useEffect(() => setCharges(chargeStatusNow()), []);
+
+  // Fire a GA4 event for every completed check so tool usage is measurable.
+  // Runs once per result render.
+  useEffect(() => {
+    if (notFound || !v) {
+      trackEvent("vehicle_check_not_found", { vrm_supplied: Boolean(vrm) });
+    } else {
+      trackEvent("vehicle_check_completed", { make: v.make, fuel_type: v.fuel });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const scrollToId = (id) => {
     const el = document.getElementById(id);

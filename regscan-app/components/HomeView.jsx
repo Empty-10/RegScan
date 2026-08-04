@@ -8,6 +8,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { PlateInput, StatusBadge, FaqItem } from "./ui";
 import { REMINDERS_ENABLED, GARAGE_ENABLED } from "@/lib/features";
+import { trackEvent } from "@/lib/analytics";
 
 export default function HomeView({ guides = [] }) {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function HomeView({ guides = [] }) {
     }
     setBusy(true);
     setError(null);
+    trackEvent("vehicle_check_started", { vehicle_type: vtype, source: "home" });
     const params = new URLSearchParams({ vrm: cleaned, type: vtype });
     router.push(`/check/?${params.toString()}`);
   };

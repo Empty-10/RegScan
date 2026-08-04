@@ -16,6 +16,15 @@ const nextConfig = {
         destination: "/how-long-is-an-mot-valid-for/how-long-is-an-mot-valid-for-a-complete-guide/",
         permanent: true,
       },
+      // SEO: the Vercel production alias serves a full duplicate of the site and
+      // was polluting analytics. Send it to the canonical www domain. Hashed
+      // preview deploys (reg-scan-<hash>.vercel.app) are unaffected.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "reg-scan.vercel.app" }],
+        destination: "https://www.regscan.co.uk/:path*",
+        permanent: true,
+      },
     ];
   },
 };

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "./Icon";
 import { PlateInput } from "./ui";
+import { trackEvent } from "@/lib/analytics";
 
 // Standalone "enter your registration" form for /check/ when no reg is supplied.
 export function CheckForm() {
@@ -19,6 +20,7 @@ export function CheckForm() {
       return;
     }
     setError(null);
+    trackEvent("vehicle_check_started", { vehicle_type: "car", source: "check_page" });
     router.push(`/check/?vrm=${encodeURIComponent(cleaned)}&type=car`);
   };
 
